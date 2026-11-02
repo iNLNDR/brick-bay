@@ -270,6 +270,50 @@ th{font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink-
   .mute{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* v3 additions */
+.mode{font-size:12px;font-weight:800;padding:1px 10px;border-radius:99px;color:#fff}
+.mode.up{background:var(--grape)} .mode.down{background:var(--sky)}
+.note{display:inline-block;background:color-mix(in srgb,var(--sun) 25%,var(--card));color:var(--ink);border-radius:10px;padding:4px 10px;font-weight:700;font-size:14px;margin:4px 0 0}
+.specials{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:16px}
+.special{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.special > div:nth-child(2){flex:1 1 200px;min-width:0}
+.special h3{font-size:22px}
+.sp-ico{width:56px;height:56px;flex:none;background:var(--card-2);border-radius:14px;padding:8px}
+.locked-card{opacity:.75}
+.vis{display:flex;justify-content:center;background:var(--card-2);border-radius:16px;padding:12px}
+.vis svg{width:100%;max-width:340px;height:auto}
+.opts.two{grid-template-columns:1fr 1fr}
+.in-row{display:flex;gap:10px;flex-wrap:wrap}
+.in-row input{flex:1 1 180px;font-size:26px;font-weight:800;text-align:center;font-family:var(--display)}
+input.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 14%,var(--card))}
+input.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--card))}
+.slot{min-height:64px;border:3px dashed var(--line);border-radius:16px;padding:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.slot.right{border-style:solid;border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--card))}
+.slot.wrong{border-style:solid;border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--card))}
+.tiles{display:flex;flex-wrap:wrap;gap:8px}
+.tile{border:0;border-radius:12px;padding:10px 14px;font-weight:800;font-size:18px;background:var(--card-2);color:var(--ink);box-shadow:0 4px 0 var(--line)}
+.tile.in{background:var(--sun);color:var(--plum);box-shadow:0 4px 0 var(--sun-dk)}
+.tile.letter{font-family:var(--display);font-size:26px;min-width:48px;padding:8px 10px;text-transform:lowercase}
+.arrow{font-weight:800;color:var(--ink-soft)}
+.match{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.match .col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.mt{border:3px solid var(--line);background:var(--card);border-radius:14px;padding:12px;font-weight:700;font-size:17px;box-shadow:0 4px 0 var(--line);text-align:left;overflow-wrap:anywhere}
+.mt.sel{border-color:var(--sun);background:color-mix(in srgb,var(--sun) 20%,var(--card))}
+.mt.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 14%,var(--card))}
+.mt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--card))}
+.bossbar{flex-basis:100%;display:flex;align-items:center;gap:12px}
+.boss-face{width:64px;height:64px;flex:none;background:rgba(255,255,255,.18);border-radius:12px;padding:6px}
+.boss-face.hit{animation:hit .4s}
+@keyframes hit{20%{transform:translateX(-6px) rotate(-6deg);filter:brightness(2)}60%{transform:translateX(6px) rotate(6deg)}}
+.hp{height:16px;background:rgba(0,0,0,.3);border-radius:4px;overflow:hidden}
+.hp i{display:block;height:100%;background:repeating-linear-gradient(90deg,#ff4d6d 0 10px,#ff8099 10px 12px);transition:width .4s}
+.bossbar small{font-weight:700;color:#fff}
+.hearts{display:flex;gap:4px}.hearts svg{width:28px;height:24px}
+.revtag{color:var(--brick)}
+.urgent{outline:4px solid var(--brick)}
+@media (max-width:860px){.specials{grid-template-columns:1fr}}
+@media (max-width:420px){.match .mt{font-size:15px;padding:10px}}
 </style>
 
 <header class="bar" id="bar" hidden>
@@ -286,20 +330,310 @@ th{font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink-
 <canvas id="confetti" aria-hidden="true"></canvas>
 
 <script>
-/* ============ helpers ============ */
+/* ===================== QUESTION ENGINE =====================
+   Every generator returns a fresh question for a Cambridge Primary stage (1–6).
+   kinds: mc (multiple choice), input (type the answer), order (tap in order),
+          spell (letter tiles), match (match pairs). */
 const R=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 const pick=a=>a[R(0,a.length-1)];
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=R(0,i);[a[i],a[j]]=[a[j],a[i]]}return a};
+const sample=(a,n)=>shuffle(a).slice(0,n);
 const fmt=n=>Number(n).toLocaleString('en-GB');
-const uid=()=>Math.random().toString(36).slice(2,9);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const dk=d=>d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
-const todayKey=()=>dk(new Date()); const yesterdayKey=()=>dk(new Date(Date.now()-864e5));
-const weekKey=()=>{const d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7));return dk(d)};
+const f1=n=>Math.round(n*10)/10;
+const an=w=>(/^[aeiou]/i.test(w)?'an ':'a ')+w;
 function near(n,count=3,spread){const s=new Set();spread=spread||Math.max(3,Math.round(Math.abs(n)*.12));
-  const o=[n+10,n-10,n+1,n-1].filter(v=>v>=0&&v!==n);s.add(pick(o));let g=0;
-  while(s.size<count&&g++<200){const v=n+R(1,spread)*(Math.random()<.5?-1:1);if(v>=0&&v!==n)s.add(v)}
-  while(s.size<count)s.add(n+s.size+2);return [...s]}
+  const o=[n+10,n-10,n+1,n-1].filter(v=>v>=0&&v!==n);if(o.length)s.add(pick(o));let g=0;
+  while(s.size<count&&g++<300){const v=n+R(1,spread)*(Math.random()<.5?-1:1);if(v>=0&&v!==n)s.add(v)}
+  let k=2;while(s.size<count)s.add(n+k++);return [...s]}
+
+/* ---------- pictures ---------- */
+const TXT='font-family="Baloo 2,Trebuchet MS,sans-serif" font-weight="800" fill="var(--ink)"';
+function clockSVG(h,m){let t='';
+  for(let i=0;i<60;i++){const a=i*6*Math.PI/180,big=i%5===0,r1=big?76:82;
+    t+=`<line x1="${f1(100+r1*Math.sin(a))}" y1="${f1(100-r1*Math.cos(a))}" x2="${f1(100+88*Math.sin(a))}" y2="${f1(100-88*Math.cos(a))}" stroke="var(--ink)" stroke-width="${big?3:1}"/>`}
+  for(let n=1;n<=12;n++){const a=n*30*Math.PI/180;t+=`<text x="${f1(100+63*Math.sin(a))}" y="${f1(106-63*Math.cos(a))}" text-anchor="middle" font-size="17" ${TXT}>${n}</text>`}
+  const ha=((h%12)+m/60)*30*Math.PI/180,ma=m*6*Math.PI/180;
+  return `<svg viewBox="0 0 200 200" role="img" aria-label="Clock face"><circle cx="100" cy="100" r="94" fill="var(--card)" stroke="var(--ink)" stroke-width="6"/>${t}
+  <line x1="100" y1="100" x2="${f1(100+44*Math.sin(ha))}" y2="${f1(100-44*Math.cos(ha))}" stroke="var(--brick)" stroke-width="9" stroke-linecap="round"/>
+  <line x1="100" y1="100" x2="${f1(100+72*Math.sin(ma))}" y2="${f1(100-72*Math.cos(ma))}" stroke="var(--sky)" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="100" cy="100" r="7" fill="var(--ink)"/></svg>`}
+function fracBarSVG(n,d){const w=300/d;let r='';for(let i=0;i<d;i++)r+=`<rect x="${f1(10+i*w)}" y="10" width="${f1(w)}" height="56" fill="${i<n?'var(--sun)':'var(--card)'}" stroke="var(--ink)" stroke-width="3"/>`;
+  return `<svg viewBox="0 0 320 76" role="img" aria-label="Fraction bar">${r}</svg>`}
+function pieSVG(n,d){let r='';const cx=90,cy=90,rad=78;
+  for(let i=0;i<d;i++){const a0=i/d*2*Math.PI-Math.PI/2,a1=(i+1)/d*2*Math.PI-Math.PI/2;
+    r+=`<path d="M${cx} ${cy} L${f1(cx+rad*Math.cos(a0))} ${f1(cy+rad*Math.sin(a0))} A${rad} ${rad} 0 0 1 ${f1(cx+rad*Math.cos(a1))} ${f1(cy+rad*Math.sin(a1))}Z" fill="${i<n?'var(--sun)':'var(--card)'}" stroke="var(--ink)" stroke-width="3"/>`}
+  return `<svg viewBox="0 0 180 180" role="img" aria-label="Fraction circle">${r}</svg>`}
+function numLineSVG(min,max,step,target,dp){const W=320,x0=20,x1=300,n=Math.round((max-min)/step),X=v=>f1(x0+(v-min)/(max-min)*(x1-x0));let t='';
+  for(let i=0;i<=n;i++){const v=min+i*step;t+=`<line x1="${X(v)}" y1="44" x2="${X(v)}" y2="${i===0||i===n?60:56}" stroke="var(--ink)" stroke-width="2"/>`}
+  const lab=v=>`<text x="${X(v)}" y="80" text-anchor="middle" font-size="15" ${TXT}>${dp?v.toFixed(dp):v}</text>`;
+  let labels=lab(min)+lab(max);if(min<0&&max>0)labels+=lab(0);
+  return `<svg viewBox="0 0 ${W} 90" role="img" aria-label="Number line"><line x1="${x0}" y1="50" x2="${x1}" y2="50" stroke="var(--ink)" stroke-width="3"/>${t}${labels}
+  <polygon points="${X(target)-9},14 ${+X(target)+9},14 ${X(target)},36" fill="var(--brick)"/></svg>`}
+function polySVG(n){if(n===0)return `<svg viewBox="0 0 160 160" role="img" aria-label="Shape"><circle cx="80" cy="80" r="62" fill="var(--sky)" stroke="var(--ink)" stroke-width="4"/></svg>`;
+  if(n===-4)return `<svg viewBox="0 0 160 160" role="img" aria-label="Shape"><rect x="14" y="44" width="132" height="72" fill="var(--sky)" stroke="var(--ink)" stroke-width="4"/></svg>`;
+  let p=[];for(let i=0;i<n;i++){const a=i/n*2*Math.PI-Math.PI/2+(n===4?Math.PI/4:0);p.push(f1(80+64*Math.cos(a))+','+f1(84+64*Math.sin(a)))}
+  return `<svg viewBox="0 0 160 160" role="img" aria-label="Shape"><polygon points="${p.join(' ')}" fill="var(--sky)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/></svg>`}
+function barChartSVG(cats,vals,step,max){const H=150,top=14,left=40,bw=46,gap=24,Y=v=>f1(top+H-(v/max)*H);let g='';
+  const majors=Math.ceil((max/step)/5)*step;
+  for(let v=0;v<=max;v+=step){const maj=v%majors===0;g+=`<line x1="${left}" y1="${Y(v)}" x2="${left+4*(bw+gap)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="${maj?2:1}"/>`;
+    if(maj)g+=`<text x="${left-6}" y="${+Y(v)+5}" text-anchor="end" font-size="13" ${TXT}>${v}</text>`}
+  const cols=['var(--brick)','var(--sky)','var(--sun)','var(--leaf)'];
+  cats.forEach((c,i)=>{const x=left+12+i*(bw+gap);g+=`<rect x="${x}" y="${Y(vals[i])}" width="${bw}" height="${f1(vals[i]/max*H)}" fill="${cols[i]}" stroke="var(--ink)" stroke-width="2"/>
+    <text x="${x+bw/2}" y="${top+H+20}" text-anchor="middle" font-size="13" ${TXT}>${c}</text>`});
+  return `<svg viewBox="0 0 340 196" role="img" aria-label="Bar chart">${g}<line x1="${left}" y1="${top}" x2="${left}" y2="${top+H}" stroke="var(--ink)" stroke-width="2"/></svg>`}
+function pictoSVG(n,half,per){let g='';const shell=(x,clip)=>`<g transform="translate(${x},0)">${clip?`<clipPath id="hc${x}"><rect x="0" y="0" width="17" height="40"/></clipPath>`:''}<g ${clip?`clip-path="url(#hc${x})"`:''}><circle cx="17" cy="22" r="15" fill="var(--sun)" stroke="var(--ink)" stroke-width="2.5"/><path d="M17 8 L17 36 M7 14 L17 36 M27 14 L17 36" stroke="var(--ink)" stroke-width="2"/></g></g>`;
+  for(let i=0;i<n;i++)g+=shell(i*38,false);if(half)g+=shell(n*38,true);const w=Math.max(200,(n+1)*38+4);
+  return `<svg viewBox="0 0 ${w} 84" role="img" aria-label="Pictogram">${g}<g transform="translate(0,46)">${shell(0,false)}<text x="44" y="28" font-size="16" ${TXT}>= ${per} shells</text></g></svg>`}
+function circuitSVG(v){const gap=v==='gap',noBat=v==='nobat';
+  const bat=noBat?`<line x1="40" y1="60" x2="40" y2="140" stroke="var(--ink)" stroke-width="4"/>`:`<line x1="40" y1="60" x2="40" y2="82" stroke="var(--ink)" stroke-width="4"/><rect x="24" y="82" width="32" height="40" rx="4" fill="var(--sun)" stroke="var(--ink)" stroke-width="3"/><rect x="34" y="76" width="12" height="6" fill="var(--ink)"/><text x="40" y="108" text-anchor="middle" font-size="16" ${TXT}>+</text><line x1="40" y1="122" x2="40" y2="140" stroke="var(--ink)" stroke-width="4"/>`;
+  const bottom=gap?`<line x1="40" y1="140" x2="110" y2="140" stroke="var(--ink)" stroke-width="4"/><line x1="150" y1="140" x2="220" y2="140" stroke="var(--ink)" stroke-width="4"/><circle cx="110" cy="140" r="4" fill="var(--ink)"/><circle cx="150" cy="140" r="4" fill="var(--ink)"/>`:`<line x1="40" y1="140" x2="220" y2="140" stroke="var(--ink)" stroke-width="4"/>`;
+  return `<svg viewBox="0 0 260 170" role="img" aria-label="Circuit">${bat}<line x1="40" y1="60" x2="110" y2="60" stroke="var(--ink)" stroke-width="4"/><line x1="150" y1="60" x2="220" y2="60" stroke="var(--ink)" stroke-width="4"/>
+  <circle cx="130" cy="50" r="20" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/><path d="M122 52 Q130 40 138 52" stroke="var(--ink)" stroke-width="2" fill="none"/><rect x="120" y="66" width="20" height="10" fill="var(--line)" stroke="var(--ink)" stroke-width="2"/>
+  <line x1="110" y1="60" x2="122" y2="66" stroke="var(--ink)" stroke-width="3"/><line x1="150" y1="60" x2="138" y2="66" stroke="var(--ink)" stroke-width="3"/>
+  <line x1="220" y1="60" x2="220" y2="140" stroke="var(--ink)" stroke-width="4"/>${bottom}</svg>`}
+function plantSVG(part){const arrows={roots:[150,176,112,172],stem:[150,112,96,112],leaves:[150,96,118,94],flower:[150,34,104,40]};const a=arrows[part];
+  return `<svg viewBox="0 0 220 200" role="img" aria-label="Plant diagram"><rect x="10" y="150" width="200" height="50" fill="#b07a43" opacity=".55"/>
+  <path d="M90 150 L70 185 M90 150 L92 192 M90 150 L112 182 M80 166 L66 170 M104 170 L118 176" stroke="#8a5a2b" stroke-width="4" fill="none"/>
+  <rect x="86" y="50" width="8" height="100" fill="#2c9a45"/>
+  <ellipse cx="66" cy="104" rx="22" ry="10" fill="#3fbf5a" transform="rotate(-20 66 104)"/><ellipse cx="114" cy="92" rx="22" ry="10" fill="#3fbf5a" transform="rotate(20 114 92)"/>
+  <circle cx="74" cy="40" r="12" fill="#ff7aa8"/><circle cx="106" cy="40" r="12" fill="#ff7aa8"/><circle cx="90" cy="24" r="12" fill="#ff7aa8"/><circle cx="90" cy="56" r="12" fill="#ff7aa8"/><circle cx="90" cy="40" r="10" fill="#ffc531"/>
+  <line x1="${a[0]}" y1="${a[1]}" x2="${a[2]}" y2="${a[3]}" stroke="var(--brick)" stroke-width="5"/><circle cx="${a[0]+12}" cy="${a[1]}" r="12" fill="var(--brick)"/><text x="${a[0]+12}" y="${a[1]+6}" text-anchor="middle" font-size="16" font-weight="800" fill="#fff" font-family="Baloo 2,sans-serif">?</text></svg>`}
+
+/* ---------- MATHS ---------- */
+const hm=(h,m)=>`${h}:${String(m).padStart(2,'0')}`;
+function clockWords(h,m){const nx=h%12+1;if(m===0)return `${h} o'clock`;if(m===30)return `half past ${h}`;if(m===15)return `quarter past ${h}`;if(m===45)return `quarter to ${nx}`;return m<30?`${m} minutes past ${h}`:`${60-m} minutes to ${nx}`}
+const MG=[
+ {id:'addsub',lo:1,hi:6,w:3,f(st){const max=[20,100,1000,10000,100000,1000000][st-1];
+  if(st>=5&&Math.random()<.35){const a=R(11,99)/10,b=R(11,99)/10,ans=f1(a+b);return {s:'Calculation',q:`What is ${a} + ${b}?`,a:String(ans),w:[f1(ans+1),f1(ans-.1),f1(ans+.1)].map(String),num:1,why:`Line up the decimal points: ${a} + ${b} = ${ans}.`}}
+  let a=R(Math.floor(max/10)||2,max),b=R(1,Math.floor(max*.6));
+  if(Math.random()<.5){if(a+b>max)a=max-b;const s=a+b;return {s:'Calculation',q:`What is ${fmt(a)} + ${fmt(b)}?`,a:s,w:near(s),num:1,why:`${fmt(a)} + ${fmt(b)} = ${fmt(s)}. Add the ones, then the tens, then the hundreds.`}}
+  if(b>a)[a,b]=[b,a];const d=a-b;return {s:'Calculation',q:`What is ${fmt(a)} − ${fmt(b)}?`,a:d,w:near(d),num:1,why:`${fmt(a)} − ${fmt(b)} = ${fmt(d)}. Check by adding: ${fmt(d)} + ${fmt(b)} = ${fmt(a)}.`}}},
+ {id:'mult',lo:1,hi:6,w:3,f(st){if(st===1){const k=pick([2,5,10]),n=R(2,6);return {s:'Number',q:`Count in ${k}s: ${k}, ${2*k}, ${3*k}, … What is number ${n} in the pattern?`,a:n*k,w:near(n*k,3,k),num:1,why:`Counting in ${k}s, number ${n} is ${n} × ${k} = ${n*k}.`}}
+  let a,b;if(st===2){a=pick([2,5,10]);b=R(1,10)}else if(st===3){a=pick([2,3,4,5,8,10]);b=R(2,10)}else if(st===4){a=R(3,12);b=R(3,12)}else if(st===5){a=R(12,49);b=R(3,9)}else{a=R(12,35);b=R(11,25)}
+  const p=a*b;return {s:'Calculation',q:`What is ${a} × ${b}?`,a:p,w:[p+a,Math.abs(p-b),p+b,p+10],num:1,why:`${a} groups of ${b} make ${fmt(p)}.`}}},
+ {id:'div',lo:2,hi:6,w:2,f(st){const t=st===2?pick([2,5,10]):st===3?pick([2,3,4,5,8,10]):R(3,12),b=R(2,st>=5?15:10),tot=t*b;
+  return {s:'Calculation',q:pick([`${fmt(tot)} gold coins are shared equally between ${t} pirates. How many does each get?`,`What is ${fmt(tot)} ÷ ${t}?`]),a:b,w:near(b,3,3),num:1,why:`${fmt(tot)} ÷ ${t} = ${b}, because ${t} × ${b} = ${fmt(tot)}.`}}},
+ {id:'place',lo:1,hi:6,w:2,f(st){const d0=Math.max(2,Math.min(7,st+1));let n=String(R(1,9));for(let i=1;i<d0;i++)n+=R(1,9);const pos=R(0,d0-1),d=+n[d0-1-pos],val=d*10**pos;
+  return {s:'Number',q:`What is the value of the digit ${d} in ${fmt(+n)}?`,a:fmt(val),w:[d,d*10**(pos+1),pos>0?d*10**(pos-1):d*100].map(fmt),num:1,why:`The ${d} is in the ${['ones','tens','hundreds','thousands','ten thousands','hundred thousands','millions'][pos]} place, so it is worth ${fmt(val)}.`}}},
+ {id:'fracof',lo:1,hi:6,w:2,f(st){if(st<=2){const n=R(2,10)*2;return {s:'Fractions',q:`What is half of ${n}?`,a:n/2,w:near(n/2,3,3),num:1,why:`Half means 2 equal parts: ${n} ÷ 2 = ${n/2}.`}}
+  let num=1,den=pick(st===3?[2,3,4,5,10]:[3,4,5,6,8,10]);if(st>=4&&Math.random()<.6)num=R(2,den-1);const u=R(2,st>=5?12:8),tot=u*den,ans=u*num;
+  return {s:'Fractions',q:`What is ${num}/${den} of ${tot}?`,a:ans,w:near(ans,3,Math.max(3,u)),num:1,why:`${tot} ÷ ${den} = ${u}${num>1?`, then ${u} × ${num} = ${ans}`:''}.`}}},
+ {id:'fracpic',lo:1,hi:6,w:2,f(st){const dens=st===1?[2,4]:st===2?[2,3,4]:st===3?[2,3,4,5,6,8]:[3,4,5,6,8,10,12];const d=pick(dens),n=st===1&&d===2?1:R(1,d-1);
+  const pie=st<=3&&Math.random()<.5;const a=`${n}/${d}`;
+  return {s:'Fractions',q:'What fraction is shaded?',vis:pie?pieSVG(n,d):fracBarSVG(n,d),a,w:[`${d}/${n}`,`${n}/${d+1}`,`${d-n}/${d}`,`1/${d}`,`${n+1}/${d}`],why:`${n} out of ${d} equal parts are shaded, so it is ${a}.`}}},
+ {id:'clock',lo:1,hi:6,w:2,f(st){const h=R(1,12);const ms=st===1?[0,30]:st===2?[0,15,30,45]:st<=4?[0,5,10,15,20,25,30,35,40,45,50,55]:Array.from({length:60},(_,i)=>i);const m=pick(ms);
+  const nx=h%12+1;const opts=[hm(h,(m+15)%60),hm(nx,m),hm(Math.max(1,Math.round(m/5))||12,(h*5)%60),hm(h,(m+30)%60),hm(h===1?12:h-1,m)];
+  return {s:'Geometry & Measure',q:'What time does this clock show?',vis:clockSVG(h,m),a:hm(h,m),w:opts,why:`The short red hand points to ${m>=30&&m!==0?`just past ${h}`:h}, and the long blue hand points to ${m} minutes. That is ${clockWords(h,m)}.`}}},
+ {id:'numline',lo:1,hi:6,w:2,f(st){const cfg=[[0,10,1,0],[0,20,2,0],[0,100,10,0],[0,1000,100,0],[0,1,.1,1],[-10,10,2,0]][st-1];const [mn,mx,sp,dp]=cfg;
+  const n=Math.round((mx-mn)/sp);let k=R(1,n-1);if(st===6&&mn+k*sp===0)k=k>1?k-1:k+1;const t=f1(mn+k*sp);const fm=v=>dp?v.toFixed(dp):String(v);
+  const w=[t+sp,t-sp,t+2*sp,t-2*sp].map(f1).filter(v=>v>=mn&&v<=mx&&v!==t).map(fm);
+  return {s:'Number',q:'What number is the arrow pointing to?',vis:numLineSVG(mn,mx,sp,t,dp),a:fm(t),w,num:1,why:`Each small jump is ${fm(sp)}. Count ${k} jumps from ${fm(mn)} to reach ${fm(t)}.`}}},
+ {id:'shapepic',lo:1,hi:6,w:2,f(st){const names={0:'circle',3:'triangle',4:'square','-4':'rectangle',5:'pentagon',6:'hexagon',8:'octagon'};
+  let pool=[0,3,4,-4];if(st>=2)pool.push(5,6);if(st>=3)pool.push(8);
+  if(st>=4&&Math.random()<.5){const n=pick([3,4,5,6,8]);return {s:'Geometry & Measure',q:'How many lines of symmetry does this regular shape have?',vis:polySVG(n),a:n,w:[n-1,n+1,n*2,2],num:1,why:`A regular shape has as many lines of symmetry as it has sides: ${n}.`}}
+  const n=pick(pool);return {s:'Geometry & Measure',q:'What is this shape called?',vis:polySVG(n),a:names[n],w:Object.values(names).filter(x=>x!==names[n]),why:n===0?'A circle is perfectly round with no corners.':n===-4?'A rectangle has 4 sides and 4 right angles, with two long and two short sides.':`It has ${Math.abs(n)} straight sides, so it is ${an(names[n])}.`}}},
+ {id:'bars',lo:2,hi:6,w:2,f(st){const step=st===2?1:st===3?2:st===4?5:10,max=step*10,cats=['Crabs','Fish','Shells','Stars'];
+  let vals;do{vals=cats.map(()=>R(1,10)*step)}while(new Set(vals).size<4);const ty=pick(['most','least','how','more']);const vis=barChartSVG(cats,vals,step,max);
+  if(ty==='most'||ty==='least'){const v=ty==='most'?Math.max(...vals):Math.min(...vals),i=vals.indexOf(v);return {s:'Statistics',q:`The crew counted sea creatures. Which did they see the ${ty}?`,vis,a:cats[i],w:cats.filter((_,j)=>j!==i),why:`The ${cats[i]} bar is the ${ty==='most'?'tallest':'shortest'} (${v}).`}}
+  if(ty==='how'){const i=R(0,3);return {s:'Statistics',q:`How many ${cats[i].toLowerCase()} did the crew count?`,vis,a:vals[i],w:near(vals[i],3,step),num:1,why:`The top of the ${cats[i]} bar lines up with ${vals[i]}.`}}
+  const [i,j]=sample([0,1,2,3],2).sort((x,y)=>vals[y]-vals[x]);const d=vals[i]-vals[j];
+  return {s:'Statistics',q:`How many more ${cats[i].toLowerCase()} than ${cats[j].toLowerCase()} were there?`,vis,a:d,w:near(d,3,step),num:1,why:`${vals[i]} − ${vals[j]} = ${d}.`}}},
+ {id:'picto',lo:2,hi:6,w:1,f(st){const per=st===2?2:pick([2,4,10]),n=R(2,5),half=st>=3&&Math.random()<.5,ans=n*per+(half?per/2:0);
+  return {s:'Statistics',q:'Mia showed the shells she found on a pictogram. How many shells did she find?',vis:pictoSVG(n,half,per),a:ans,w:near(ans,3,per),num:1,why:`${n}${half?' and a half':''} pictures × ${per} = ${ans}.${half?` Half a picture is ${per/2}.`:''}`}}},
+ {id:'ordernum',lo:1,hi:6,w:2,f(st){let v=new Set();const gen=()=>st===1?R(0,20):st===2?R(0,100):st===3?R(100,999):st===4?R(1000,9999):st===5?R(1,99)/10:R(-20,20);
+  while(v.size<4)v.add(gen());const s=[...v].sort((a,b)=>a-b);const show=x=>st===5?x.toFixed(1):fmt(x);
+  return {s:'Number',kind:'order',q:'Put these numbers in order, smallest first.',a:s.map(show),why:`Smallest to largest: ${s.map(show).join(', ')}.`}}},
+ {id:'word',lo:1,hi:6,w:2,f(st){const max=[10,50,500,5000,50000,200000][st-1],a=R(Math.ceil(max/5),max),b=R(Math.ceil(max/10),Math.ceil(max/2)),th=pick(['gold coins','seashells','bricks','pearls']);
+  if(Math.random()<.5)return {s:'Calculation',q:`The crew has ${fmt(a)} ${th}. They find ${fmt(b)} more. How many ${th} now?`,a:a+b,w:near(a+b),num:1,why:`Find the total: ${fmt(a)} + ${fmt(b)} = ${fmt(a+b)}.`};
+  const B=Math.max(a,b),L=Math.min(a,b);return {s:'Calculation',q:`A chest holds ${fmt(B)} ${th}. The captain spends ${fmt(L)}. How many are left?`,a:B-L,w:near(B-L),num:1,why:`Take away: ${fmt(B)} − ${fmt(L)} = ${fmt(B-L)}.`}}},
+ {id:'shapefact',lo:1,hi:6,w:1,f(st){const bank=[['How many sides does a triangle have?','3',['4','2','5'],1,'Tri means three.'],['How many faces does a cube have?','6',['4','8','12'],2,'Top, bottom, front, back, left and right: 6 faces.'],
+  ['How many corners does a square have?','4',['3','5','8'],1,'A square has 4 corners (vertices).'],['How many right angles does a rectangle have?','4',['2','3','0'],3,'Every corner of a rectangle is a right angle.'],
+  ['How many degrees are in a right angle?','90°',['180°','45°','360°'],4,'A right angle is a quarter turn: 90°.'],['How many degrees are in a full turn?','360°',['180°','90°','100°'],4,'A full turn is 360°.'],
+  ['How many faces does a triangular prism have?','5',['6','3','4'],4,'2 triangles and 3 rectangles make 5 faces.'],['What do the angles in a triangle add up to?','180°',['360°','90°','270°'],5,'The angles in any triangle add up to 180°.'],
+  ['A rectangle is 8 cm long and 3 cm wide. What is its perimeter?','22 cm',['24 cm','11 cm','16 cm'],4,'8 + 3 + 8 + 3 = 22 cm.'],['A rectangle is 7 m long and 6 m wide. What is its area?','42 m²',['26 m²','13 m²','48 m²'],5,'Area = length × width = 7 × 6 = 42 m².'],
+  ['How many centimetres are in 1 metre?','100',['10','1000','60'],3,'1 m = 100 cm.'],['How many grams are in 1 kilogram?','1000',['100','10','60'],4,'1 kg = 1000 g.'],['How many millilitres are in 1 litre?','1000',['100','10','500'],4,'1 l = 1000 ml.']];
+  const b=pick(bank.filter(x=>x[3]<=st));return {s:'Geometry & Measure',q:b[0],a:b[1],w:b[2],why:b[4]}}},
+ {id:'timefact',lo:1,hi:6,w:1,f(st){if(st===1){const b=pick([['How many days are in a week?',7,[5,10,6]],['How many months are in a year?',12,[10,7,24]],['Which day comes after Monday?','Tuesday',['Sunday','Friday','Wednesday']]]);return {s:'Geometry & Measure',q:b[0],a:b[1],w:b[2],why:`The answer is ${b[1]}.`}}
+  if(st<=3){const h=R(2,5);return {s:'Geometry & Measure',q:`How many minutes are in ${h} hours?`,a:h*60,w:[h*100,h*30,h*60+10],num:1,why:`1 hour = 60 minutes, so ${h} × 60 = ${h*60}.`}}
+  const sh=R(1,10),sm=pick([5,10,15,20,25,35,40,45,50]),add=pick([25,35,40,45,50,55,70,85]),tm=sh*60+sm+add,eh=Math.floor(tm/60),em=tm%60;
+  return {s:'Geometry & Measure',q:`A boat leaves at ${hm(sh,sm)} and sails for ${add} minutes. What time does it arrive?`,a:hm(eh,em),w:[hm(eh,(em+10)%60),hm(eh+1,em),hm(sh,(sm+add)%60),hm(eh,(em+50)%60)],why:`${hm(sh,sm)} + ${add} minutes = ${hm(eh,em)}.`}}},
+ {id:'matchmult',lo:2,hi:6,w:1,f(st){const tabs=st===2?[2,5,10]:st===3?[2,3,4,5,8,10]:[3,4,6,7,8,9,11,12];const pairs=[],seen=new Set();let g=0;
+  while(pairs.length<3&&g++<100){const a=pick(tabs),b=R(2,st>=4?12:10),p=a*b;if(seen.has(p))continue;seen.add(p);pairs.push([`${a} × ${b}`,String(p)])}
+  return {s:'Calculation',kind:'match',q:'Match each times table fact to its answer.',pairs,why:pairs.map(p=>`${p[0]} = ${p[1]}`).join(', ')+'.'}}}
+];
+
+/* ---------- SCIENCE ---------- */
+const ANIMALS=[['lion','mammal'],['whale','mammal'],['bat','mammal'],['dolphin','mammal'],['elephant','mammal'],['orangutan','mammal'],['penguin','bird'],['eagle','bird'],['ostrich','bird'],['parrot','bird'],['owl','bird'],['shark','fish'],['salmon','fish'],['clownfish','fish'],['goldfish','fish'],['snake','reptile'],['crocodile','reptile'],['turtle','reptile'],['lizard','reptile'],['Komodo dragon','reptile'],['frog','amphibian'],['newt','amphibian'],['toad','amphibian'],['salamander','amphibian'],['ant','insect'],['butterfly','insect'],['beetle','insect'],['bee','insect'],['ladybird','insect']];
+const GROUPWHY={mammal:'Mammals have hair or fur, breathe air and feed their babies milk.',bird:'Birds have feathers and wings, and lay eggs.',fish:'Fish live in water, breathe with gills and have fins.',reptile:'Reptiles have dry, scaly skin and lay eggs on land.',amphibian:'Amphibians start life in water and have moist skin.',insect:'Insects have six legs and three body parts.'};
+const HABITATS=[['camel','desert'],['lizard','desert'],['polar bear','polar ice'],['penguin','polar ice'],['clownfish','coral reef'],['sea turtle','coral reef'],['orangutan','rainforest'],['toucan','rainforest'],['frog','pond'],['duck','pond'],['owl','woodland'],['squirrel','woodland'],['crab','seashore'],['starfish','seashore']];
+const MATERIALS=[['window','glass','it is transparent'],['mirror','glass','it is smooth and shiny'],['nail','metal','it is strong and hard'],['coin','metal','it is hard and lasts a long time'],['jumper','wool','it is soft and warm'],['pencil','wood','it is light and easy to shape'],['raincoat','plastic','it is waterproof'],['drinking straw','plastic','it is waterproof and bendy'],['newspaper','paper','it is thin and easy to print on'],['car tyre','rubber','it is bendy and grips the road'],['wellington boots','rubber','they are waterproof and bendy']];
+const MAG_Y=['iron nail','steel paperclip','steel pin','steel bolt'],MAG_N=['plastic ruler','wooden block','glass marble','aluminium can','copper wire','rubber band'];
+const COND_Y=['copper wire','steel spoon','aluminium foil','iron nail'],COND_N=['plastic ruler','rubber band','wooden spoon','glass marble','paper straw'];
+const STATES=[['ice','solid'],['a stone','solid'],['sand','solid'],['butter','solid'],['water','liquid'],['milk','liquid'],['juice','liquid'],['cooking oil','liquid'],['honey','liquid'],['steam','gas'],['air','gas'],['oxygen','gas']];
+const LIGHT_Y=['the Sun','a torch','a candle flame','a lamp','lightning','a campfire'],LIGHT_N=['the Moon','a mirror','a shiny spoon','a bike reflector','a diamond','a cat\'s eyes'];
+const ORGANS=[['heart','pumps blood around the body',3],['lungs','take in oxygen when you breathe',3],['stomach','breaks down food',3],['brain','controls the body and helps you think',3],['skeleton','supports and protects the body',2],['muscles','help the body move',3],['kidneys','clean the blood and make urine',5],['intestines','absorb nutrients from digested food',5]];
+const PARTS=[['roots','take in water and hold the plant in the soil'],['stem','carries water up and holds the plant upright'],['leaves','make food using sunlight'],['flower','makes seeds'],['fruit','protects the seeds'],['seed','grows into a new plant']];
+const FOODS=[['chicken','protein'],['eggs','protein'],['fish','protein'],['beans','protein'],['rice','carbohydrate'],['bread','carbohydrate'],['pasta','carbohydrate'],['potato','carbohydrate'],['apple','fruit and vegetables'],['carrot','fruit and vegetables'],['banana','fruit and vegetables'],['spinach','fruit and vegetables'],['milk','dairy'],['cheese','dairy'],['yoghurt','dairy']];
+const PLANETS=['Mercury','Venus','Earth','Mars','Jupiter','Saturn','Uranus','Neptune'];
+const CYCLES=[['a butterfly',['egg','caterpillar','pupa (chrysalis)','butterfly'],2],['a frog',['frogspawn (eggs)','tadpole','froglet','adult frog'],2],['a flowering plant',['seed','seedling','young plant','flowering plant'],2],['a chicken',['egg','chick','young chicken','adult chicken'],2],['a human',['baby','child','teenager','adult'],4]];
+const CHAINS=[['grass','rabbit','fox'],['leaves','caterpillar','bird','hawk'],['algae','small fish','big fish','shark'],['grass','grasshopper','frog','snake'],['seeds','mouse','owl']];
+const SCI_BANK=[
+ ['What do plants need to grow well?','Light, water and air',['Only soil','Only sugar','Darkness and salt'],'Biology',1,4,'Plants use light, water and air to make their own food.'],
+ ['Which of these is a living thing?','A tree',['A rock','A cloud','A chair'],'Biology',1,2,'Living things grow, need food and water, and reproduce.'],
+ ['In the food chain grass → rabbit → fox, what is the grass?','A producer',['A predator','A consumer','A decomposer'],'Biology',3,6,'Plants make their own food, so they are producers.'],
+ ['Which gas do we breathe out more of than we breathe in?','Carbon dioxide',['Oxygen','Helium','Hydrogen'],'Biology',4,6,'Our bodies use oxygen and make carbon dioxide.'],
+ ['What is photosynthesis?','How plants make food using light',['How animals sleep','How rocks melt','How water freezes'],'Biology',5,6,'Plants use light, water and carbon dioxide to make sugar.'],
+ ['What are microorganisms?','Living things too small to see without a microscope',['Very large animals','Types of rock','Tiny robots'],'Biology',5,6,'Bacteria and some fungi are microorganisms.'],
+ ['Why should you wash your hands before eating?','To remove germs',['To make them warm','To make food taste better','To grow taller'],'Biology',1,4,'Washing removes germs that can make you ill.'],
+ ['What happens to water when it boils?','It turns into water vapour (a gas)',['It becomes ice','It turns into salt','Nothing changes'],'Chemistry',3,6,'Boiling water turns quickly into a gas.'],
+ ['Ice melting into water is a change from…','solid to liquid',['liquid to gas','gas to solid','liquid to solid'],'Chemistry',3,6,'Ice is solid water. When it warms, it melts.'],
+ ['Salt stirred into water until you can\'t see it makes a…','solution',['rock','gas','magnet'],'Chemistry',4,6,'The salt dissolves, making a solution.'],
+ ['How could you get the salt back from salty water?','Let the water evaporate',['Freeze it','Stir it faster','Add more water'],'Chemistry',5,6,'When the water evaporates, the salt is left behind.'],
+ ['Which change can NOT be reversed?','Baking a cake',['Melting chocolate','Freezing water','Dissolving sugar'],'Chemistry',5,6,'Baking makes new materials, so you can\'t undo it.'],
+ ['A push or a pull is called a…','force',['light','sound','shadow'],'Physics',1,4,'Forces are pushes and pulls.'],
+ ['How is a shadow made?','An object blocks the light',['Light bends around it','The object glows','Sound hits a wall'],'Physics',2,5,'Light travels in straight lines, so the blocked area stays dark.'],
+ ['Sound is made when things…','vibrate',['freeze','melt','glow'],'Physics',3,6,'Vibrations travel through the air to your ears.'],
+ ['Which force pulls things down towards Earth?','Gravity',['Friction','Magnetism','Wind'],'Physics',3,6,'Gravity pulls objects towards the centre of the Earth.'],
+ ['On which surface is friction greatest?','Rough carpet',['Smooth ice','Wet glass','Polished floor'],'Physics',3,6,'Rough surfaces grip more.'],
+ ['What happens when two north poles of magnets meet?','They push apart',['They pull together','Nothing','They get hot'],'Physics',3,6,'Like poles repel. Opposite poles attract.'],
+ ['What is the unit for measuring force?','newtons',['metres','litres','grams'],'Physics',5,6,'Forces are measured in newtons (N).'],
+ ['What causes day and night?','Earth spinning on its axis',['The Sun circling Earth each day','The Moon covering the Sun','Clouds blocking light'],'Earth & Space',3,6,'As Earth spins, your side faces the Sun or away from it.'],
+ ['How long does Earth take to travel around the Sun?','About one year',['One day','One month','One week'],'Earth & Space',4,6,'One full orbit takes about 365 days.'],
+ ['How long does the Moon take to orbit Earth?','About one month',['One day','One year','One hour'],'Earth & Space',5,6,'The Moon orbits Earth about once every 27 days.'],
+ ['Which of these is a type of rock?','granite',['plastic','rubber','wool'],'Earth & Space',3,5,'Granite is a hard rock formed from cooled magma.'],
+ ['What is the Moon?','Earth\'s natural satellite',['A star','A planet','A cloud'],'Earth & Space',2,6,'The Moon orbits the Earth.'],
+ ['Which tool measures temperature?','thermometer',['ruler','compass','clock'],'Earth & Space',2,5,'A thermometer measures how hot or cold something is.'],
+ ['What is a fossil?','The remains of a living thing preserved in rock',['A shiny crystal','A type of volcano','A kind of soil'],'Earth & Space',3,6,'Fossils form over millions of years.']
+];
+const SG=[
+ {id:'animalgroup',lo:2,hi:6,w:2,f(){const [a,g]=pick(ANIMALS);const groups=Object.keys(GROUPWHY);
+  if(Math.random()<.5)return {s:'Biology',q:`Which animal group does ${an(a)} belong to?`,a:g,w:groups.filter(x=>x!==g),why:`${an(a)[0].toUpperCase()+an(a).slice(1)} is ${an(g)}. ${GROUPWHY[g]}`};
+  const others=sample(ANIMALS.filter(x=>x[1]!==g),3).map(x=>x[0]);return {s:'Biology',q:`Which of these is ${an(g)}?`,a,w:others,why:`${a[0].toUpperCase()+a.slice(1)} is ${an(g)}. ${GROUPWHY[g]}`}}},
+ {id:'habitat',lo:1,hi:4,w:1,f(){const [a,h]=pick(HABITATS);const hs=[...new Set(HABITATS.map(x=>x[1]))];return {s:'Biology',q:`Which habitat suits ${an(a)} best?`,a:h,w:hs.filter(x=>x!==h),why:`${an(a)[0].toUpperCase()+an(a).slice(1)} is adapted to live in a ${h} habitat.`}}},
+ {id:'material',lo:1,hi:3,w:1,f(){const [o,m,why]=pick(MATERIALS);const ms=[...new Set(MATERIALS.map(x=>x[1]))];return {s:'Chemistry',q:`What is ${an(o)} usually made of?`,a:m,w:ms.filter(x=>x!==m),why:`It is made of ${m} because ${why}.`}}},
+ {id:'magnet',lo:2,hi:5,w:1,f(){return {s:'Physics',q:'Which of these is magnetic?',a:pick(MAG_Y),w:sample(MAG_N,3),why:'Only some metals, like iron and steel, are magnetic. Aluminium and copper are not.'}}},
+ {id:'conduct',lo:3,hi:6,w:1,f(){return {s:'Physics',q:'Which of these lets electricity flow through it (a conductor)?',a:pick(COND_Y),w:sample(COND_N,3),why:'Metals are good electrical conductors. Plastic, rubber, wood and glass are insulators.'}}},
+ {id:'state',lo:2,hi:5,w:1,f(){const [x,s]=pick(STATES);return {s:'Chemistry',q:`Is ${x} a solid, a liquid or a gas?`,a:s,w:['solid','liquid','gas'].filter(v=>v!==s),why:s==='solid'?`${x[0].toUpperCase()+x.slice(1)} keeps its shape${x==='sand'?'. Each grain of sand is a tiny solid':''}.`:s==='liquid'?`${x[0].toUpperCase()+x.slice(1)} flows and takes the shape of its container.`:`${x[0].toUpperCase()+x.slice(1)} spreads out to fill any space.`}}},
+ {id:'light',lo:1,hi:5,w:1,f(){return {s:'Physics',q:'Which of these is a light source (it makes its own light)?',a:pick(LIGHT_Y),w:sample(LIGHT_N,3),why:'Light sources make their own light. The Moon, mirrors and shiny things only reflect light.'}}},
+ {id:'organ',lo:3,hi:6,w:1,f(st){const pool=ORGANS.filter(o=>o[2]<=st);const [o,j]=pick(pool);const others=sample(pool.filter(x=>x[0]!==o),3);
+  if(Math.random()<.5)return {s:'Biology',q:`What is the job of the ${o}?`,a:j,w:others.map(x=>x[1]),why:`The ${o} ${j}.`};
+  return {s:'Biology',q:`Which part of the body ${j}?`,a:`the ${o}`,w:others.map(x=>`the ${x[0]}`),why:`The ${o} ${j}.`}}},
+ {id:'plantpart',lo:1,hi:5,w:1,f(){const [p,j]=pick(PARTS);const o=sample(PARTS.filter(x=>x[0]!==p),3);return {s:'Biology',q:`What is the job of a plant's ${p}?`,a:j,w:o.map(x=>x[1]),why:`The ${p} ${j}.`}}},
+ {id:'plantpic',lo:1,hi:4,w:1,f(){const p=pick(['roots','stem','leaves','flower']);return {s:'Biology',q:'Which part of the plant is the arrow pointing to?',vis:plantSVG(p),a:p,w:['roots','stem','leaves','flower'].filter(x=>x!==p),why:`That part is the ${p}. The ${p} ${PARTS.find(x=>x[0]===p)[1]}.`}}},
+ {id:'food',lo:1,hi:3,w:1,f(){const [f,g]=pick(FOODS);return {s:'Biology',q:`Which food group is ${f} in?`,a:g,w:['protein','carbohydrate','fruit and vegetables','dairy'].filter(x=>x!==g),why:`${f[0].toUpperCase()+f.slice(1)} belongs to the ${g} group.`}}},
+ {id:'planet',lo:5,hi:6,w:1,f(){if(Math.random()<.5){const ps=sample(PLANETS,4).sort((a,b)=>PLANETS.indexOf(a)-PLANETS.indexOf(b));return {s:'Earth & Space',kind:'order',q:'Put these planets in order, starting nearest the Sun.',a:ps,why:`From the Sun: ${PLANETS.join(', ')}.`}}
+  const b=pick([['Which planet is closest to the Sun?','Mercury'],['Which is the largest planet?','Jupiter'],['Which planet is famous for its bright rings?','Saturn'],['Which planet is called the red planet?','Mars'],['Which planet do we live on?','Earth']]);
+  return {s:'Earth & Space',q:b[0],a:b[1],w:sample(PLANETS.filter(x=>x!==b[1]),3),why:`The answer is ${b[1]}.`}}},
+ {id:'cycle',lo:2,hi:6,w:1,f(st){const c=pick(CYCLES.filter(x=>x[2]<=st));return {s:'Biology',kind:'order',q:`Put the life cycle of ${c[0]} in order.`,a:c[1],why:c[1].join(' → ')+'.'}}},
+ {id:'chain',lo:3,hi:6,w:1,f(){const c=pick(CHAINS);return {s:'Biology',kind:'order',q:'Put this food chain in order, starting with the producer.',a:c,why:`${c.join(' → ')}. The arrow means "is eaten by".`}}},
+ {id:'water',lo:4,hi:6,w:1,f(){return {s:'Earth & Space',kind:'order',q:'Put the water cycle in order.',a:['Water evaporates from the sea','Water vapour cools into clouds','Rain falls from the clouds','Water flows back to the sea'],why:'Evaporation, condensation, precipitation, then collection.'}}},
+ {id:'circuit',lo:3,hi:6,w:1,f(){const v=pick(['ok','ok','gap','nobat']);return {s:'Physics',q:'Will the bulb light up in this circuit?',vis:circuitSVG(v),a:v==='ok'?'Yes':'No',w:[v==='ok'?'No':'Yes'],why:v==='ok'?'The circuit is a complete loop with a battery, so electricity flows.':v==='gap'?'There is a gap in the wire, so the circuit is not complete.':'There is no battery to push electricity around the circuit.'}}},
+ {id:'matchsci',lo:2,hi:6,w:1,f(st){if(st>=3&&Math.random()<.5){const os=sample(ORGANS.filter(o=>o[2]<=st),3);return {s:'Biology',kind:'match',q:'Match each body part to its job.',pairs:os.map(o=>[o[0],o[1]]),why:os.map(o=>`${o[0]}: ${o[1]}`).join('. ')+'.'}}
+  const gs=sample(Object.keys(GROUPWHY),3);const pairs=gs.map(g=>[pick(ANIMALS.filter(a=>a[1]===g))[0],g]);return {s:'Biology',kind:'match',q:'Match each animal to its group.',pairs,why:pairs.map(p=>`${p[0]}: ${p[1]}`).join(', ')+'.'}}},
+ {id:'scibank',lo:1,hi:6,w:3,bank:1,f(st){const pool=SCI_BANK.filter(b=>st>=b[4]&&st<=b[5]);const b=pick(pool.length?pool:SCI_BANK);return {s:b[3],q:b[0],a:b[1],w:b[2],why:b[6]}}}
+];
+
+/* ---------- ENGLISH ---------- */
+const WC={noun:{h:'a naming word',l:['ship','island','parrot','map','teacher','garden','apple','castle','river','chair','cloud','pencil','ocean','mountain','treasure'],lo:1},
+ verb:{h:'a doing word',l:['run','jump','swim','climb','shout','read','write','dig','throw','laugh','sing','build','explore','whisper'],lo:1},
+ adjective:{h:'it describes a noun',l:['shiny','huge','tiny','brave','soft','noisy','golden','rough','gentle','sticky','gloomy','sparkling','ancient','fierce'],lo:1},
+ adverb:{h:'it describes a verb',l:['quickly','slowly','loudly','quietly','carefully','happily','bravely','gently','suddenly'],lo:3},
+ pronoun:{h:'it takes the place of a noun',l:['he','she','they','we','it','them','us','him'],lo:3},
+ preposition:{h:'it shows where something is',l:['under','behind','between','above','beside','through','across','inside'],lo:4}};
+const PLURALS=[['ship','ships',1],['shell','shells',1],['coin','coins',1],['box','boxes',1],['fox','foxes',1],['bus','buses',1],['dish','dishes',1],['beach','beaches',2],['watch','watches',2],['brush','brushes',2],['baby','babies',2],['city','cities',2],['story','stories',2],['puppy','puppies',2],['berry','berries',2],['child','children',2],['mouse','mice',2],['foot','feet',2],['tooth','teeth',2],['man','men',2],['woman','women',3],['sheep','sheep',3],['goose','geese',3],['leaf','leaves',3],['knife','knives',3],['wolf','wolves',3],['half','halves',4],['potato','potatoes',4],['hero','heroes',4],['cactus','cacti',5]];
+const PAST=[['walk','walked',2],['jump','jumped',2],['play','played',2],['climb','climbed',2],['smile','smiled',2],['dance','danced',2],['stop','stopped',3],['hop','hopped',3],['clap','clapped',3],['carry','carried',3],['cry','cried',3],['hurry','hurried',3],['run','ran',2],['go','went',2],['see','saw',2],['eat','ate',2],['swim','swam',3],['catch','caught',3],['think','thought',3],['bring','brought',4],['write','wrote',3],['sing','sang',3],['take','took',3],['find','found',3],['fly','flew',3],['dig','dug',3],['buy','bought',4],['teach','taught',4],['sleep','slept',3],['make','made',2],['freeze','froze',4],['choose','chose',4]];
+const SYN=[['big','large',1],['small','little',1],['happy','glad',1],['fast','quick',1],['shut','close',1],['begin','start',1],['shout','yell',2],['angry','cross',2],['scared','afraid',2],['tired','sleepy',3],['rich','wealthy',3],['brave','bold',3],['enormous','huge',3],['silent','quiet',3],['delicious','tasty',3],['hurry','rush',3],['furious','angry',4],['gloomy','dark',4],['courageous','brave',5],['exhausted','tired',5],['miniature','tiny',5],['astonished','amazed',5],['peculiar','strange',5],['reluctant','unwilling',6],['abundant','plentiful',6]];
+const ANT=[['hot','cold',1],['up','down',1],['wet','dry',1],['open','closed',1],['fast','slow',1],['day','night',1],['happy','sad',1],['brave','scared',2],['early','late',2],['full','empty',2],['heavy','light',2],['noisy','quiet',2],['rough','smooth',3],['shallow','deep',3],['arrive','leave',3],['ancient','modern',4],['generous','selfish',4],['victory','defeat',4],['include','exclude',4],['permanent','temporary',5],['frequent','rare',5],['maximum','minimum',5],['guilty','innocent',5],['expand','contract',6]];
+const SPELL=[['said',1,2],['they',1,2],['come',1,2],['some',1,2],['have',1,2],['little',1,2],['what',1,2],['there',1,2],['because',2,3],['friend',2,4],['people',2,3],['water',2,3],['again',2,3],['could',2,3],['should',2,3],['every',2,3],['laugh',2,4],['beautiful',3,4],['believe',3,5],['different',3,4],['enough',3,4],['favourite',3,5],['heard',3,4],['island',3,4],['minute',3,4],['often',3,4],['surprise',3,5],['answer',4,5],['business',4,6],['caught',4,5],['centre',4,5],['certain',4,5],['difficult',4,5],['disappear',4,6],['exercise',4,6],['library',4,5],['separate',4,6],['through',4,5],['accommodate',5,6],['committee',5,6],['definite',5,6],['environment',5,6],['excellent',5,6],['foreign',5,6],['government',5,6],['immediately',5,6],['necessary',5,6],['neighbour',5,6],['occur',5,6],['parliament',5,6],['persuade',5,6],['restaurant',5,6],['rhythm',5,6],['temperature',5,6],['vegetable',5,6]];
+const TILES=[['cat','A furry pet that says meow',1,2],['ship','A big boat',1,2],['fish','It swims and has fins',1,2],['frog','A green jumping animal',1,2],['crab','A sea animal that walks sideways',1,3],['shell','A hard cover found on the beach',1,3],['beach','Sand by the sea',2,4],['pirate','A sailor who hunts for treasure',2,4],['parrot','A colourful bird that copies words',2,4],['planet','Earth is one of these',2,5],['friend','Someone you like to play with',2,4],['island','Land with water all around it',3,5],['anchor','A heavy hook that stops a ship',3,5],['captain','The leader of a ship',3,5],['weather','Sun, rain, wind or snow',3,5],['minute','Sixty seconds',3,5],['compass','It shows which way is north',3,6],['volcano','A mountain that can erupt',3,6],['journey','A long trip',4,6],['library','A place full of books to borrow',4,6],['science','The subject about how the world works',4,6],['skeleton','All the bones in your body',4,6],['thought','The past tense of think',4,6],['rhythm','The beat in music',5,6],['lightning','A bright flash in a storm',5,6],['necessary','Needed',5,6]];
+const PREFIX=[['happy','un'],['kind','un'],['lock','un'],['tidy','un'],['fair','un'],['agree','dis'],['like','dis'],['appear','dis'],['obey','dis'],['honest','dis'],['possible','im'],['polite','im'],['patient','im'],['correct','in'],['visible','in'],['complete','in']];
+const SUFFIX=[['hope + ful','hopeful',['hopefull','hopful']],['care + ful','careful',['carefull','carful']],['kind + ness','kindness',['kindnes','kindniss']],['sad + ness','sadness',['sadnes','saddness']],['happy + ly','happily',['happyly','happly']],['enjoy + ment','enjoyment',['enjoiment','enjoyement']],['run + ing','running',['runing','runnning']],['hop + ing','hopping',['hoping','hoppeing']],['make + ing','making',['makeing','makking']],['beauty + ful','beautiful',['beautyful','beautifull']],['quick + ly','quickly',['quickley','quikly']],['excite + ment','excitement',['excitment','exciteement']]];
+const HOMO=[['We sailed ___ the island.','to',['too','two'],2],['I have ___ parrots.','two',['to','too'],2],['The soup was ___ hot to eat.','too',['to','two'],2],['The pirates lost ___ map.','their',['there','they\'re'],3],['Put the chest over ___.','there',['their','they\'re'],3],['___ going to find the gold!','They\'re',['Their','There'],3],['We swam in the ___.','sea',['see'],2],['Can you ___ the ship?','see',['sea'],2],['The wind ___ the sails.','blew',['blue'],2],['The sky is bright ___.','blue',['blew'],2],['I ___ the answer!','know',['no'],2],['Did you ___ the bell?','hear',['here'],2],['Come over ___!','here',['hear'],2],['She ate a juicy ___.','pear',['pair'],3],['I need a new ___ of shoes.','pair',['pear'],3],['The knight rode through the ___.','night',['knight'],3],['The dog wagged ___ tail.','its',['it\'s'],4],['___ raining again.','It\'s',['Its'],4]];
+const CONTR=[['do not','don\'t'],['can not','can\'t'],['I am','I\'m'],['it is','it\'s'],['we are','we\'re'],['they are','they\'re'],['she is','she\'s'],['will not','won\'t'],['I have','I\'ve'],['you are','you\'re'],['did not','didn\'t'],['should not','shouldn\'t']];
+const ENDP=[['Where is the treasure','?'],['The parrot is green','.'],['Watch out for the shark','!'],['What time is it','?'],['We found a gold coin','.'],['Help me','!'],['How many shells did you find','?'],['The sea is calm today','.'],['What a huge wave','!'],['Can you swim','?']];
+const MARKS={'.':'full stop (.)','?':'question mark (?)','!':'exclamation mark (!)'};
+const SENT=[[['The','cat','sat','down.'],1],[['I','like','to','swim.'],1],[['The','sun','is','hot.'],1],[['We','can','see','a','ship.'],1],[['The','pirates','dug','for','gold.'],2],[['My','parrot','can','talk.'],2],[['Lina','flew','over','the','tall','trees.'],3],[['After','lunch,','we','went','to','the','beach.'],3],[['Suddenly,','a','huge','wave','hit','the','boat.'],4],[['Although','it','was','raining,','the','crew','kept','sailing.'],5],[['The','old','captain,','who','loved','maps,','told','stories.'],5]];
+const P1='Lina the parrot lived on a small green island. Every morning she flew to the tallest palm tree to look for ships. One day she saw a red sail far away. She flapped her wings and squawked to wake the whole crew.';
+const P2='Tomas found a bottle on the beach. Inside was a rolled-up note. It said, "Look under the third palm tree." Tomas counted the trees, grabbed a spade and started to dig. After a while, his spade hit something hard.';
+const P3='The old lighthouse had stood on the cliff for two hundred years. Its keeper, Mr Osei, climbed one hundred and twelve steps every evening to light the lamp. Although his knees ached, he never missed a night, because he knew sailors trusted the light to guide them safely past the jagged rocks.';
+const P4='Coral reefs cover less than one percent of the ocean floor, yet they are home to about a quarter of all sea creatures. Tiny animals called polyps build reefs slowly, adding a thin layer of limestone each year. When sea water becomes too warm, the polyps lose the colourful algae that feed them, and the coral turns white. Scientists call this bleaching. Sadly, bleached coral can die if the water stays hot.';
+const ENG_BANK=[
+ ['Where did Lina live?','On a small green island',['On a big ship','In a cave','In a city'],'Reading',1,3,'The first sentence tells us.',P1],
+ ['What colour was the sail Lina saw?','red',['blue','green','white'],'Reading',1,3,'She saw a red sail far away.',P1],
+ ['Why did Lina squawk?','To wake the crew',['She was hungry','To scare the fish','She was singing'],'Reading',1,3,'She squawked to wake the whole crew.',P1],
+ ['Which word tells us how Lina moved her wings?','flapped',['lived','saw','wake'],'Reading',1,3,'She flapped her wings.',P1],
+ ['Where did Tomas find the bottle?','On the beach',['In the sea','Under a tree','In his house'],'Reading',2,4,'The first sentence tells us.',P2],
+ ['What was inside the bottle?','A note',['A coin','A map','Sand'],'Reading',2,4,'Inside was a rolled-up note.',P2],
+ ['Where did the note tell Tomas to look?','Under the third palm tree',['Inside the bottle','Under a rock','On the ship'],'Reading',2,4,'The note said to look under the third palm tree.',P2],
+ ['What do you think the spade hit?','A buried box or chest',['A fish','The sky','A cloud'],'Reading',2,4,'The note was a treasure clue, so it was probably something buried.',P2],
+ ['How many steps did Mr Osei climb each evening?','112',['200','12','120'],'Reading',4,6,'One hundred and twelve = 112.',P3],
+ ['Why did Mr Osei never miss a night?','Sailors relied on the light to stay safe',['He liked climbing stairs','The lamp lit itself','He lived at the top'],'Reading',4,6,'Sailors trusted the light to guide them past the rocks.',P3],
+ ['What does "jagged" most likely mean?','rough and sharp',['smooth and round','soft and warm','bright and shiny'],'Reading',4,6,'Jagged rocks have sharp, uneven edges.',P3],
+ ['Which word shows the climb was hard for Mr Osei?','ached',['stood','guide','trusted'],'Reading',4,6,'His knees ached.',P3],
+ ['What builds coral reefs?','Tiny animals called polyps',['Fish','Sea plants','Sailors'],'Reading',5,6,'The text says polyps build reefs slowly.',P4],
+ ['About how many sea creatures live on coral reefs?','About a quarter',['Almost all','About one percent','Only a few'],'Reading',5,6,'Reefs are home to about a quarter of all sea creatures.',P4],
+ ['What causes bleaching?','Sea water becoming too warm',['Too much sunlight on fish','Ships sailing nearby','Cold winters'],'Reading',5,6,'When the water gets too warm, polyps lose their algae.',P4],
+ ['Why does the writer use the word "yet" in the first sentence?','To show a surprising contrast',['To show time','To give an order','To ask a question'],'Reading',5,6,'Reefs are small, yet they hold many creatures. That is surprising.',P4],
+ ['Which word shows the writer feels unhappy about bleaching?','Sadly',['Scientists','slowly','colourful'],'Reading',5,6,'"Sadly" tells us the writer\'s feelings.',P4],
+ ['Which sentence starts with a fronted adverbial?','After lunch, we explored the cave.',['We explored the cave after lunch.','The cave was dark.','We explored, after lunch the cave.'],'Grammar',4,6,'"After lunch," comes first and tells us when. It is followed by a comma.'],
+ ['Which sentence uses speech marks correctly?','"Land ahead!" shouted Mia.',['"Land ahead! shouted Mia."','Land ahead! "shouted Mia."','"Land" ahead! shouted Mia.'],'Grammar',4,6,'Only the spoken words go inside the speech marks.'],
+ ['How do you write "the map that belongs to the captain"?','the captain\'s map',['the captains map','the captains\' map','the captain map'],'Grammar',4,6,'One captain owns the map, so add \'s.'],
+ ['Pick the best joining word: "I wanted to swim ___ the water was too cold."','but',['so','or','because'],'Grammar',3,6,'"But" joins two ideas that contrast.'],
+ ['Choose the right word: "The pirates ___ on the deck yesterday."','were',['was','is','be'],'Grammar',2,5,'"Pirates" is plural and "yesterday" is past, so we use "were".'],
+ ['Which sentence is in the passive voice?','The treasure was found by the crew.',['The crew found the treasure.','The crew is finding treasure.','Find the treasure!'],'Grammar',6,6,'In the passive voice, the thing acted on comes first.'],
+ ['Which word is a conjunction?','because',['quickly','island','under'],'Grammar',3,6,'Conjunctions join clauses, like because, and, but, when.']
+];
+function misspell(w){const out=new Set(),add=x=>{if(x&&x!==w&&x.length>1)out.add(x)};
+  add(w.replace('ie','ei'));add(w.replace('ei','ie'));const dbl=w.match(/([bcdfglmnprst])\1/);if(dbl)add(w.replace(dbl[0],dbl[1]));
+  const sg=w.match(/[aeiou]([bcdfglmnprst])[aeiou]/);if(sg)add(w.replace(sg[0],sg[0][0]+sg[1]+sg[1]+sg[0][2]));
+  add(w.replace(/c/,'k'));add(w.replace(/ph/,'f'));add(w.replace(/ough/,'ow'));add(w.replace(/ay/,'ai'));add(w.replace(/(.)e$/,'$1'));
+  let g=0;while(out.size<3&&g++<40){const i=R(1,w.length-2);if(Math.random()<.5)add(w.slice(0,i)+w.slice(i+1));else add(w.slice(0,i)+w[i+1]+w[i]+w.slice(i+2))}
+  return sample([...out],3)}
+function wrongPlural(s,r){return [s+'s',s+'es',s.replace(/y$/,'ies'),s.replace(/fe?$/,'ves'),r+'s',r.replace(/ies$/,'ys')].filter(x=>x!==r)}
+function wrongPast(b,r){const e=b.endsWith('e')?b+'d':b+'ed';return [e,b+'ed',b+'d',b+b.slice(-1)+'ed',r+'ed',b.replace(/y$/,'ied'),b+'s'].filter(x=>x!==r)}
+function wrongContr(full,r){const plain=r.replace("'",''),i=r.indexOf("'");return [plain,plain.slice(0,i-1)+"'"+plain.slice(i-1),plain.slice(0,i+1)+"'"+plain.slice(i+1),full.replace(' ',"'")].filter(x=>x!==r)}
+const EG=[
+ {id:'wordclass',lo:1,hi:6,w:2,f(st){const cls=Object.keys(WC).filter(k=>WC[k].lo<=st);const c=pick(cls);const others=cls.filter(k=>k!==c);
+  return {s:'Grammar',q:`Which word is ${an(c)} (${WC[c].h})?`,a:pick(WC[c].l),w:others.slice(0,3).map(o=>pick(WC[o].l)).concat(pick(WC[pick(others)].l)),why:`"${'X'}" is ${an(c)}: ${WC[c].h}.`}}},
+ {id:'plural',lo:1,hi:6,w:2,f(st){const pool=PLURALS.filter(p=>p[2]<=st);const [s,r]=pick(pool);const rule=r===s+'s'?'Most words just add -s.':r===s+'es'?'Words ending in s, x, ch or sh add -es.':/ies$/.test(r)?'Change y to i and add -es.':/ves$/.test(r)?'Change f or fe to v and add -es.':`"${s}" has an irregular plural.`;
+  if(st>=2&&r.length<=9&&Math.random()<.35)return {s:'Spelling',kind:'spell',q:`Spell the plural of "${s}" (more than one).`,a:r,why:`${rule} One ${s}, two ${r}.`};
+  return {s:'Spelling',q:`What is the plural of "${s}"?`,a:r,w:wrongPlural(s,r),why:`${rule} One ${s}, two ${r}.`}}},
+ {id:'past',lo:2,hi:6,w:2,f(st){const [b,r]=pick(PAST.filter(p=>p[2]<=st));const reg=/ed$/.test(r);
+  return {s:'Grammar',q:pick([`What is the past tense of "${b}"?`,`Yesterday the pirates ___ (${b}). Which word fits?`]),a:r,w:wrongPast(b,r),why:reg?`"${b}" is a regular verb, so add -ed: ${r}.`:`"${b}" is irregular. Today I ${b}, yesterday I ${r}.`}}},
+ {id:'syn',lo:1,hi:6,w:2,f(st){const pool=SYN.filter(p=>p[2]<=st&&p[2]>=st-3);const [a,b]=pick(pool.length?pool:SYN);const w=sample(SYN.filter(p=>p[1]!==b&&p[0]!==a),3).map(p=>pick([p[0],p[1]]));
+  return {s:'Vocabulary',q:`Which word means the same as "${a}"?`,a:b,w,why:`"${a}" and "${b}" are synonyms: they mean almost the same.`}}},
+ {id:'ant',lo:1,hi:6,w:2,f(st){const pool=ANT.filter(p=>p[2]<=st&&p[2]>=st-3);const [a,b]=pick(pool.length?pool:ANT);const w=sample(ANT.filter(p=>p[1]!==b&&p[0]!==a),3).map(p=>p[0]);
+  return {s:'Vocabulary',q:`Which word means the opposite of "${a}"?`,a:b,w,why:`"${a}" and "${b}" are antonyms: they are opposites.`}}},
+ {id:'spellmc',lo:1,hi:6,w:2,f(st){const pool=SPELL.filter(p=>st>=p[1]&&st<=p[2]);const [wd]=pick(pool.length?pool:SPELL);return {s:'Spelling',q:'Which spelling is correct?',a:wd,w:misspell(wd),why:`The correct spelling is "${wd}".`}}},
+ {id:'tiles',lo:1,hi:6,w:2,f(st){const pool=TILES.filter(p=>st>=p[2]&&st<=p[3]);const [wd,h]=pick(pool.length?pool:TILES);return {s:'Spelling',kind:'spell',q:`Spell the word: ${h}.`,a:wd,why:`The word is "${wd}".`}}},
+ {id:'prefix',lo:3,hi:6,w:1,f(){const [wd,p]=pick(PREFIX);return {s:'Vocabulary',q:`Which prefix makes the opposite of "${wd}"?`,a:p,w:['un','dis','im','in'].filter(x=>x!==p),why:`${p} + ${wd} = ${p}${wd}.`}}},
+ {id:'suffix',lo:3,hi:6,w:1,f(){const [s,r,w]=pick(SUFFIX);return {s:'Spelling',q:`${s} = ?`,a:r,w,why:`${s} is spelled "${r}".`}}},
+ {id:'homo',lo:2,hi:6,w:1,f(st){const [s,a,w]=pick(HOMO.filter(h=>h[3]<=st));return {s:'Spelling',q:`Which word fits? "${s}"`,a,w,why:`"${s.replace('___',a)}"`}}},
+ {id:'contr',lo:2,hi:5,w:1,f(){const [full,r]=pick(CONTR);return {s:'Grammar',q:`What is the short form (contraction) of "${full}"?`,a:r,w:wrongContr(full,r),why:`The apostrophe shows where letters are missing: ${full} → ${r}.`}}},
+ {id:'endp',lo:1,hi:3,w:1,f(){const [s,m]=pick(ENDP);return {s:'Grammar',q:`Which mark should end this sentence? "${s}"`,a:MARKS[m],w:Object.values(MARKS).filter(x=>x!==MARKS[m]),why:m==='?'?'It asks something, so it needs a question mark.':m==='!'?'It shows a strong feeling or warning, so it needs an exclamation mark.':'It tells us something, so it ends with a full stop.'}}},
+ {id:'sentence',lo:1,hi:6,w:1,f(st){const [ws]=pick(SENT.filter(s=>s[1]<=st&&s[1]>=st-2).concat(SENT.filter(s=>s[1]<=st)).slice(0,6));return {s:'Grammar',kind:'order',q:'Put the words in order to make a sentence.',a:ws,why:`"${ws.join(' ')}" A sentence starts with a capital letter and ends with a full stop.`}}},
+ {id:'matcheng',lo:2,hi:6,w:1,f(st){if(Math.random()<.5){const ps=sample(CONTR,3);return {s:'Grammar',kind:'match',q:'Match each pair of words to its contraction.',pairs:ps.map(p=>[p[0],p[1]]),why:ps.map(p=>`${p[0]} → ${p[1]}`).join(', ')+'.'}}
+  const ps=sample(SYN.filter(p=>p[2]<=st),3);return {s:'Vocabulary',kind:'match',q:'Match each word to its synonym.',pairs:ps.map(p=>[p[0],p[1]]),why:ps.map(p=>`${p[0]} = ${p[1]}`).join(', ')+'.'}}},
+ {id:'engbank',lo:1,hi:6,w:3,bank:1,f(st){const pool=ENG_BANK.filter(b=>st>=b[4]&&st<=b[5]);const b=pick(pool.length?pool:ENG_BANK);return {s:b[3],q:b[0],a:b[1],w:b[2],why:b[6],p:b[7]}}}
+];
+// fix "X" placeholder in word-class explanations after the answer is chosen
+const GENS={math:MG,sci:SG,eng:EG};
+
+function finalize(raw,subj){const q={...raw,subj,kind:raw.kind||'mc'};
+  if(q.id==='wordclass'||(raw.why&&raw.why.includes('"X"')))q.why=raw.why.replace('X',raw.a);
+  if(q.kind==='mc'){q.a=String(q.a);const w=[...new Set((q.w||[]).map(String))].filter(x=>x!==q.a);q.opts=shuffle([q.a,...w.slice(0,3)]);
+    if(q.num&&/^-?[\d,]+(\.\d+)?$/.test(q.a)&&Math.random()<.4){q.kind='input';delete q.opts}}
+  if(q.kind==='order'){let it;let g=0;do{it=shuffle(q.a)}while(it.join('|')===q.a.join('|')&&g++<10);q.items=it}
+  if(q.kind==='spell'){q.a=String(q.a);let it,g=0;do{it=shuffle([...q.a])}while(it.join('')===q.a&&g++<10);q.items=it}
+  if(q.kind==='match'){q.right=shuffle(q.pairs.map(p=>p[1]))}
+  delete q.w;q.sig=subj+'|'+q.q+'|'+(Array.isArray(q.a)?q.a.join(','):q.kind==='match'?q.pairs.map(p=>p.join('=')).join(','):q.a);
+  return q}
+function weightedPick(gs){const tot=gs.reduce((s,g)=>s+g.w,0);let r=Math.random()*tot;for(const g of gs){r-=g.w;if(r<=0)return g}return gs[gs.length-1]}
+function genOne(subj,st,avoid){const gs=GENS[subj].filter(g=>st>=g.lo&&st<=g.hi);let q,g=0;
+  do{q=finalize(weightedPick(gs).f(st),subj)}while(avoid&&avoid.has(q.sig)&&g++<15);return q}
+function checkInput(q,val){const n=s=>String(s).trim().toLowerCase().replace(/[,\s]/g,'').replace(/^\+/,'');const a=n(q.a),v=n(val);if(!v)return false;
+  if(a===v)return true;const fa=parseFloat(a),fv=parseFloat(v);return /^-?[\d.]+$/.test(a)&&/^-?[\d.]+$/.test(v)&&Math.abs(fa-fv)<1e-9}
 
 /* ============ pixel art ============ */
 // Each character is a 12×12 grid. '.' = empty; letters map to the palette.
@@ -377,161 +711,94 @@ function petSVG(m){const c=m.c,a=m.a,ink='#2a1f4a';let f='';
    <rect x="44" y="62" width="12" height="4" rx="2" fill="${ink}"/>
    <rect x="22" y="88" width="16" height="8" rx="3" fill="${c}" stroke="${ink}" stroke-width="2"/><rect x="62" y="88" width="16" height="8" rx="3" fill="${c}" stroke="${ink}" stroke-width="2"/></svg>`}
 
-/* ============ state ============ */
+
+/* ===================== BOSSES ===================== */
+const BOSSES={
+ math:{name:'Calculator Crab',pal:{r:'#e8442e',y:'#ffc531',W:'#fff',K:'#1a1333'},map:['.r........r.','rr........rr','r.r......r.r','...rrrrrr...','..rWKrrWKr..','.rrrrrrrrrr.','rrrrryyrrrrr','.rrrrrrrrrr.','..rrrrrrrr..','.r.r.rr.r.r.','r..r....r..r','............']},
+ sci:{name:'Beaker Blob',pal:{g:'#b9c4dc',l:'#7be35a',d:'#2c8a3a',W:'#fff',K:'#1a1333'},map:['...gggggg...','...g....g...','...g....g...','..gg.l..gg..','.gllllllllg.','gllWKllWKllg','gllllllllllg','glllldddlllg','gllllllllllg','.gllllllllg.','..gggggggg..','............']},
+ eng:{name:'Word Serpent',pal:{b:'#4b7bf5',y:'#ffc531',r:'#ff5fa0',W:'#fff',K:'#1a1333'},map:['....bbbb....','...bbbbbb...','..bWKbbWKb..','..bbbbbbbb..','..bbbrrbbb..','....rr.r....','...bbbbb....','..bbyybbbb..','.bbbbbbbbbb.','bbyybbbyybbb','bbbbbbbbbbbb','.bbbbbbbbbb.']}
+};
+const HEART=['.rr.rr.','rrrrrrr','rrrrrrr','.rrrrr.','..rrr..','...r...'];
+const heartSVG=on=>pixel(HEART,{r:on?'#ff4d6d':'rgba(255,255,255,.35)'},'heart');
+
+/* ===================== STATE ===================== */
 const KEY='brickbay-v2';
-const DEFAULT_REWARDS=[
- {id:'r1',name:'Extra 30 min game time',cost:150,icon:'game'},
- {id:'r2',name:'Ice cream treat',cost:250,icon:'cone'},
- {id:'r3',name:'Pick the family movie',cost:400,icon:'ticket'},
- {id:'r4',name:'Marugame Udon lunch',cost:600,icon:'udon'},
- {id:'r5',name:'New LEGO set',cost:2000,icon:'brick'}
-];
-const newPlayer=(name,stage,avatar)=>({id:uid(),name,stage,avatar,xp:0,coins:20,streak:0,lastDay:null,today:{date:todayKey(),n:0},week:{key:weekKey(),xp:0},
-  stats:{math:{c:0,t:0},sci:{c:0,t:0},eng:{c:0,t:0}},strands:{},quests:{math:0,sci:0,eng:0},pets:['pip'],created:Date.now()});
-const freshFamily=()=>({v:2,profiles:[],active:null,pin:null,rewards:DEFAULT_REWARDS.map(r=>({...r})),claims:[],muted:false});
+const dk=d=>d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+const todayKey=()=>dk(new Date()),yesterdayKey=()=>dk(new Date(Date.now()-864e5));
+const weekKey=()=>{const d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7));return dk(d)};
+const uid=()=>Math.random().toString(36).slice(2,9);
+const DAY=864e5,REVIEW_GAPS=[1,3,7];
+const DEFAULT_REWARDS=[{id:'r1',name:'Extra 30 min game time',cost:150,icon:'game'},{id:'r2',name:'Ice cream treat',cost:250,icon:'cone'},{id:'r3',name:'Pick the family movie',cost:400,icon:'ticket'},{id:'r4',name:'Marugame Udon lunch',cost:600,icon:'udon'},{id:'r5',name:'New LEGO set',cost:2000,icon:'brick'}];
+const SUBJS=['math','sci','eng'];
+const tri=v=>({math:v,sci:v,eng:v});
+function upgrade(p){
+  p.adj=p.adj||tri(0);p.recent=p.recent||{math:[],sci:[],eng:[]};p.seen=p.seen||{math:[],sci:[],eng:[]};p.review=p.review||[];
+  p.tier=p.tier||tri(1);p.flags=p.flags||{math:Math.min(5,p.quests?.math||0),sci:Math.min(5,p.quests?.sci||0),eng:Math.min(5,p.quests?.eng||0)};
+  p.bosses=p.bosses||0;p.today=p.today||{date:todayKey(),n:0};p.today.coins=p.today.coins||0;p.week=p.week||{key:weekKey(),xp:0};
+  p.quests=p.quests||tri(0);p.stats=p.stats||{math:{c:0,t:0},sci:{c:0,t:0},eng:{c:0,t:0}};p.strands=p.strands||{};p.pets=p.pets||['pip'];return p}
+const newPlayer=(name,stage,avatar)=>upgrade({id:uid(),name,stage,avatar,xp:0,coins:20,streak:0,lastDay:null,created:Date.now()});
+const freshFamily=()=>({v:3,profiles:[],active:null,pin:null,rewards:DEFAULT_REWARDS.map(r=>({...r})),claims:[],muted:false,coinCap:150});
 let F=freshFamily();
-try{const raw=localStorage.getItem(KEY);if(raw)F=Object.assign(freshFamily(),JSON.parse(raw));
-  else{const old=localStorage.getItem('brickbay-v1');if(old){const o=JSON.parse(old);const p=newPlayer(o.name||'Captain',o.stage||3,'alien');
-    Object.assign(p,{xp:o.xp||0,coins:o.coins||0,streak:o.streak||0,lastDay:o.lastDay,stats:o.stats||p.stats,strands:o.strands||{},quests:o.quests||p.quests,pets:o.mates||['pip']});
-    F.profiles.push(p);F.active=p.id;}}}catch(e){}
+try{const raw=localStorage.getItem(KEY);if(raw)F=Object.assign(freshFamily(),JSON.parse(raw));}catch(e){}
+F.profiles.forEach(upgrade);if(F.coinCap===undefined)F.coinCap=150;
 function save(){try{localStorage.setItem(KEY,JSON.stringify(F))}catch(e){}}
 const P=()=>F.profiles.find(p=>p.id===F.active);
 const lvlOf=p=>Math.floor(p.xp/100)+1;
 const weekXP=p=>p.week&&p.week.key===weekKey()?p.week.xp:0;
-function rollDay(p){if(p.today.date!==todayKey())p.today={date:todayKey(),n:0};if(!p.week||p.week.key!==weekKey())p.week={key:weekKey(),xp:0};}
+function rollDay(p){if(p.today.date!==todayKey())p.today={date:todayKey(),n:0,coins:0};if(!p.week||p.week.key!==weekKey())p.week={key:weekKey(),xp:0}}
+const effStage=(p,subj)=>Math.max(1,Math.min(6,p.stage+(p.adj[subj]||0)));
 
-/* ============ sound & voice ============ */
+/* ---- coins: daily limit for normal play ---- */
+function earn(p,n,exempt){if(n<=0)return 0;if(!exempt&&F.coinCap){const left=Math.max(0,F.coinCap-p.today.coins);n=Math.min(n,left);p.today.coins+=n}p.coins+=n;return n}
+
+/* ---- adaptive difficulty ---- */
+function track(p,subj,ok){const r=p.recent[subj];r.push(ok?1:0);if(r.length>12)r.shift();
+  if(r.length>=8){const acc=r.reduce((a,b)=>a+b,0)/r.length;
+    if(acc>=.85&&p.adj[subj]<1&&p.stage+p.adj[subj]<6){p.adj[subj]++;p.recent[subj]=[];return 'up'}
+    if(acc<.5&&p.adj[subj]>-1&&p.stage+p.adj[subj]>1){p.adj[subj]--;p.recent[subj]=[];return 'down'}}return null}
+
+/* ---- spaced repetition of mistakes ---- */
+function addMistake(p,q){const c={...q};delete c.rev;const ex=p.review.find(r=>r.q.sig===q.sig);
+  if(ex){ex.box=0;ex.due=Date.now()+DAY}else{p.review.push({q:c,box:0,due:Date.now()+DAY});if(p.review.length>60)p.review.shift()}}
+function reviewRight(p,q){const ex=p.review.find(r=>r.q.sig===q.sig);if(!ex)return false;ex.box++;
+  if(ex.box>=REVIEW_GAPS.length){p.review=p.review.filter(r=>r!==ex);return 'mastered'}ex.due=Date.now()+REVIEW_GAPS[ex.box]*DAY;return 'kept'}
+const dueReviews=(p,subj)=>p.review.filter(r=>r.due<=Date.now()&&(!subj||r.q.subj===subj));
+
+/* ---- quests ---- */
+function freshForQuest(q){const c=finalize({...q},q.subj);c.rev=true;return c}
+function buildList(p,mode,subj,n){const list=[],avoid=new Set();
+  if(mode==='review'){const pool=dueReviews(p).concat(p.review.filter(r=>r.due>Date.now()).sort((a,b)=>a.due-b.due));
+    pool.slice(0,n).forEach(r=>{const q={...r.q,rev:true};list.push(q);avoid.add(q.sig)});return list}
+  if(mode==='mystery'){for(let i=0;i<n;i++){const s=SUBJS[i%3];const st=Math.min(6,effStage(p,s)+1);const q=genOne(s,st,new Set([...avoid,...p.seen[s]]));list.push(q);avoid.add(q.sig)}return shuffle(list)}
+  if(mode==='normal'){dueReviews(p,subj).slice(0,2).forEach(r=>{const q={...r.q,rev:true};list.push(q);avoid.add(q.sig)})}
+  const st=effStage(p,subj);const seen=new Set(p.seen[subj]);
+  while(list.length<n){const q=genOne(subj,st,new Set([...avoid,...seen]));list.push(q);avoid.add(q.sig)}
+  return mode==='normal'?shuffle(list):list}
+function remember(p,q){const s=p.seen[q.subj];s.push(q.sig);if(s.length>50)s.shift()}
+
+/* ===================== SOUND ===================== */
 let AC=null;
 function tone(fs,dur=.12,type='square'){if(F.muted)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();
   fs.forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;const t=AC.currentTime+i*dur;
     g.gain.setValueAtTime(.07,t);g.gain.exponentialRampToValueAtTime(.001,t+dur*1.6);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+dur*1.7)})}catch(e){}}
-const sfx={good:()=>tone([660,880]),bad:()=>tone([220,170],.16,'sawtooth'),win:()=>tone([523,659,784,1046],.11),coin:()=>tone([988,1319],.07)};
+const sfx={good:()=>tone([660,880]),bad:()=>tone([220,170],.16,'sawtooth'),win:()=>tone([523,659,784,1046],.11),coin:()=>tone([988,1319],.07),hit:()=>tone([180,120],.08,'square'),tap:()=>tone([520],.04)};
 function speak(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-GB';u.rate=.9;speechSynthesis.speak(u)}catch(e){toast('Read aloud is not available on this device')}}
 
-/* ============ subjects & questions ============ */
+/* ===================== SUBJECTS ===================== */
 const SUBJ={
  math:{name:'Number Reef',subject:'Maths',cls:'c-math',col:'var(--brick)',dk:'var(--brick-dk)',btn:'red',strands:['Number','Calculation','Fractions','Geometry & Measure','Statistics']},
  sci:{name:'Lab Lagoon',subject:'Science',cls:'c-sci',col:'var(--leaf)',dk:'var(--leaf-dk)',btn:'green',strands:['Biology','Chemistry','Physics','Earth & Space']},
- eng:{name:'Word Harbour',subject:'English',cls:'c-eng',col:'var(--sky)',dk:'var(--sky-dk)',btn:'blue',strands:['Grammar','Vocabulary','Spelling','Reading']}
+ eng:{name:'Word Harbour',subject:'English',cls:'c-eng',col:'var(--sky)',dk:'var(--sky-dk)',btn:'blue',strands:['Grammar','Vocabulary','Spelling','Reading']},
+ mix:{name:'Mystery Isle',subject:'Mixed',cls:'',col:'var(--grape)',dk:'var(--grape-dk)',btn:'grape'}
 };
-function islandSVG(key){const s=SUBJ[key];const flags=Math.min(P().quests[key],5);let blocks='';const cols=[s.col,'var(--sun)',s.dk,'var(--sun-dk)'];
-  const st=[[60,2],[100,3],[140,4],[180,3],[220,2]];
-  st.forEach(([x,h],i)=>{for(let j=0;j<h;j++){const y=118-j*18,c=cols[(i+j)%4];blocks+=`<rect x="${x}" y="${y}" width="38" height="16" fill="${c}"/><rect x="${x+6}" y="${y-5}" width="9" height="5" fill="${c}"/><rect x="${x+23}" y="${y-5}" width="9" height="5" fill="${c}"/>`}});
-  let fl='';for(let i=0;i<flags;i++){const x=72+i*40,y=118-(st[i][1]-1)*18;fl+=`<rect x="${x}" y="${y-38}" width="3" height="33" fill="var(--ink)"/><rect x="${x+3}" y="${y-38}" width="16" height="10" fill="var(--sun)"/>`}
-  return `<svg class="px" viewBox="0 0 320 160" aria-hidden="true"><rect width="320" height="160" fill="var(--card-2)"/><rect x="10" y="136" width="300" height="24" fill="var(--sea)" opacity=".5"/><rect x="34" y="128" width="252" height="14" fill="#f3d58b"/>${blocks}${fl}<rect x="270" y="18" width="26" height="26" fill="var(--sun)"/></svg>`}
+function islandSVG(key){const p=P(),s=SUBJ[key];const flags=Math.min(p.flags[key],5),tier=p.tier[key];let blocks='';const cols=[s.col,'var(--sun)',s.dk,'var(--sun-dk)'];
+  const st=[[60,2],[100,3],[140,3+Math.min(tier,3)],[180,3],[220,2]];
+  st.forEach(([x,h],i)=>{for(let j=0;j<h;j++){const y=124-j*16,c=cols[(i+j)%4];blocks+=`<rect x="${x}" y="${y}" width="38" height="14" fill="${c}"/><rect x="${x+6}" y="${y-4}" width="9" height="4" fill="${c}"/><rect x="${x+23}" y="${y-4}" width="9" height="4" fill="${c}"/>`}});
+  let fl='';for(let i=0;i<flags;i++){const x=72+i*40,y=124-(st[i][1]-1)*16;fl+=`<rect x="${x}" y="${y-36}" width="3" height="31" fill="var(--ink)"/><rect x="${x+3}" y="${y-36}" width="16" height="10" fill="var(--sun)"/>`}
+  const boss=flags>=5?`<g transform="translate(250,8) scale(4)">${BOSSES[key].map.map((r,y)=>[...r].map((c,x)=>BOSSES[key].pal[c]?`<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${BOSSES[key].pal[c]}"/>`:'').join('')).join('')}</g>`:`<rect x="270" y="18" width="26" height="26" fill="var(--sun)"/>`;
+  return `<svg class="px" viewBox="0 0 320 160" aria-hidden="true"><rect width="320" height="160" fill="var(--card-2)"/><rect x="10" y="138" width="300" height="22" fill="var(--sea)" opacity=".5"/><rect x="34" y="130" width="252" height="12" fill="#f3d58b"/>${blocks}${fl}${boss}</svg>`}
 
-const M={
- addsub(st){const max=[20,100,1000,10000,100000,1000000][st-1];
-  if(st>=5&&Math.random()<.35){const a=R(11,99)/10,b=R(11,99)/10,ans=+(a+b).toFixed(1);return {q:`What is ${a} + ${b}?`,a:String(ans),w:[+(ans+1).toFixed(1),+(ans-.1).toFixed(1),+(ans+.1).toFixed(1)].map(String),s:'Calculation',why:`Line up the decimal points: ${a} + ${b} = ${ans}.`}}
-  let a=R(Math.floor(max/10)||2,max),b=R(1,Math.floor(max*.6));
-  if(Math.random()<.5){if(a+b>max)a=max-b;const ans=a+b;return {q:`What is ${fmt(a)} + ${fmt(b)}?`,a:ans,w:near(ans),s:'Calculation',why:`${fmt(a)} + ${fmt(b)} = ${fmt(ans)}. Add ones, then tens, then hundreds.`}}
-  if(b>a)[a,b]=[b,a];const ans=a-b;return {q:`What is ${fmt(a)} − ${fmt(b)}?`,a:ans,w:near(ans),s:'Calculation',why:`${fmt(a)} − ${fmt(b)} = ${fmt(ans)}. Check: ${fmt(ans)} + ${fmt(b)} = ${fmt(a)}.`}},
- mult(st){if(st===1){const n=R(2,6);return {q:`Count in 2s: 2, 4, 6, … What is number ${n} in the pattern?`,a:n*2,w:near(n*2,3,3),s:'Number',why:`Counting in 2s, number ${n} is ${n} × 2 = ${n*2}.`}}
-  let a,b;if(st===2){a=pick([2,5,10]);b=R(1,10)}else if(st===3){a=pick([2,3,4,5,8,10]);b=R(2,10)}else if(st===4){a=R(3,12);b=R(3,12)}else if(st===5){a=R(12,49);b=R(3,9)}else{a=R(12,35);b=R(11,25)}
-  const ans=a*b;return {q:`What is ${a} × ${b}?`,a:ans,w:[ans+a,ans-b,ans+b].filter(v=>v!==ans&&v>0),s:'Calculation',why:`${a} groups of ${b} make ${fmt(ans)}.`}},
- div(st){if(st<2)return M.half();const t=st===2?pick([2,5,10]):st===3?pick([2,3,4,5,8,10]):R(3,12);const b=R(2,st>=5?15:10),tot=t*b;
-  return {q:`${fmt(tot)} gold coins are shared equally between ${t} pirates. How many does each get?`,a:b,w:near(b,3,3),s:'Calculation',why:`${fmt(tot)} ÷ ${t} = ${b}, because ${t} × ${b} = ${fmt(tot)}.`}},
- place(st){const d0=Math.max(2,Math.min(7,st+1));let n=String(R(1,9));for(let i=1;i<d0;i++)n+=R(1,9);const pos=R(0,d0-1),d=+n[d0-1-pos],val=d*10**pos;
-  const w=[d,d*10**(pos+1),pos>0?d*10**(pos-1):d*100].filter(v=>v!==val);
-  return {q:`What is the value of the digit ${d} in ${fmt(+n)}?`,a:fmt(val),w:[...new Set(w.map(fmt))],s:'Number',why:`The ${d} is in the ${['ones','tens','hundreds','thousands','ten thousands','hundred thousands','millions'][pos]} place, so it is worth ${fmt(val)}.`}},
- half(){const n=R(2,10)*2;return {q:`What is half of ${n}?`,a:n/2,w:near(n/2,3,3),s:'Fractions',why:`Half means 2 equal parts: ${n} ÷ 2 = ${n/2}.`}},
- frac(st){if(st<=2)return M.half();let num=1,den=pick(st===3?[2,3,4,5,10]:[3,4,5,6,8,10]);if(st>=4&&Math.random()<.6)num=R(2,den-1);
-  const u=R(2,st>=5?12:8),tot=u*den,ans=u*num;return {q:`What is ${num}/${den} of ${tot}?`,a:ans,w:near(ans,3,Math.max(3,u)),s:'Fractions',why:`${tot} ÷ ${den} = ${u}${num>1?`, then ${u} × ${num} = ${ans}`:''}.`}},
- shape(st){const bank=[['How many sides does a triangle have?','3',['4','2','5'],1],['How many sides does a hexagon have?','6',['5','8','7'],2],['How many sides does a pentagon have?','5',['6','4','8'],2],
-  ['How many faces does a cube have?','6',['4','8','12'],2],['How many corners does a square have?','4',['3','5','8'],1],['How many sides does an octagon have?','8',['6','10','7'],3],
-  ['How many right angles does a rectangle have?','4',['2','3','0'],3],['How many degrees are in a right angle?','90°',['180°','45°','360°'],4],['How many degrees are in a full turn?','360°',['180°','90°','100°'],4],
-  ['How many faces does a triangular prism have?','5',['6','3','4'],4],['What do the angles in a triangle add up to?','180°',['360°','90°','270°'],5],
-  ['A rectangle is 8 cm long and 3 cm wide. What is its perimeter?','22 cm',['24 cm','11 cm','16 cm'],4],['A rectangle is 7 m long and 6 m wide. What is its area?','42 m²',['26 m²','13 m²','48 m²'],5]];
-  const b=pick(bank.filter(x=>x[3]<=st));return {q:b[0],a:b[1],w:b[2],s:'Geometry & Measure',why:`The answer is ${b[1]}.`}},
- time(st){if(st===1){const b=pick([['How many days are in a week?',7,[5,10,6]],['How many months are in a year?',12,[10,7,24]]]);return {q:b[0],a:b[1],w:b[2],s:'Geometry & Measure',why:`There are ${b[1]}.`}}
-  if(st<=3){const h=R(2,5);return {q:`How many minutes are in ${h} hours?`,a:h*60,w:[h*100,h*30,h*60+10],s:'Geometry & Measure',why:`1 hour = 60 minutes, so ${h} × 60 = ${h*60}.`}}
-  const sh=R(1,10),sm=pick([5,10,15,20,25,35,40,45,50]),add=pick([25,35,40,45,50,55,70,85]),tm=sh*60+sm+add,eh=Math.floor(tm/60),em=tm%60,f=(h,m)=>`${h}:${String(m).padStart(2,'0')}`;
-  return {q:`A boat leaves at ${f(sh,sm)} and sails for ${add} minutes. What time does it arrive?`,a:f(eh,em),w:[f(eh,(em+10)%60),f(eh+1,em),f(sh,Math.min(59,sm+add%60))],s:'Geometry & Measure',why:`${f(sh,sm)} + ${add} minutes = ${f(eh,em)}.`}},
- stats(st){if(st<2)return M.addsub(st);const per=pick([2,5,10]),n=R(3,9),half=st>=4&&per>2&&Math.random()<.5,ans=n*per+(half?per/2:0);
-  return {q:`On a pictogram, one shell picture stands for ${per} shells. Mia's row has ${n}${half?' and a half':''} pictures. How many shells did she find?`,a:ans,w:near(ans,3,per),s:'Statistics',why:`${n}${half?'½':''} × ${per} = ${ans}.`}},
- word(st){const max=[10,50,500,5000,50000,200000][st-1],a=R(Math.ceil(max/5),max),b=R(Math.ceil(max/10),Math.ceil(max/2)),th=pick(['gold coins','seashells','bricks','pearls']);
-  if(Math.random()<.5)return {q:`The crew has ${fmt(a)} ${th}. They find ${fmt(b)} more. How many ${th} now?`,a:a+b,w:near(a+b),s:'Calculation',why:`Find the total: ${fmt(a)} + ${fmt(b)} = ${fmt(a+b)}.`};
-  const B=Math.max(a,b),S2=Math.min(a,b);return {q:`A chest holds ${fmt(B)} ${th}. The captain spends ${fmt(S2)}. How many are left?`,a:B-S2,w:near(B-S2),s:'Calculation',why:`Take away: ${fmt(B)} − ${fmt(S2)} = ${fmt(B-S2)}.`}}
-};
-const MGEN=['addsub','mult','div','place','frac','shape','time','stats','word','addsub','mult'];
-const SCI=[
- ['What do plants need to grow well?','Light, water and air',['Only soil','Only sugar','Darkness and salt'],'Biology',1,4,'Plants use light, water and air to make their own food.'],
- ['Which part of a plant takes in water from the soil?','Roots',['Flowers','Leaves','Seeds'],'Biology',1,4,'Roots soak up water and hold the plant in the ground.'],
- ['Which part of a plant makes seeds?','The flower',['The root','The leaf','The stem'],'Biology',2,5,'Flowers are where seeds are made.'],
- ['Which of these is a mammal?','Whale',['Shark','Octopus','Crab'],'Biology',1,5,'Whales breathe air and feed their babies milk.'],
- ['What does your skeleton do?','Supports and protects your body',['Digests your food','Pumps your blood','Helps you smell'],'Biology',2,5,'Bones hold you up and protect organs like the brain and heart.'],
- ['Which organ pumps blood around the body?','Heart',['Lungs','Stomach','Brain'],'Biology',3,6,'The heart is a muscle that pumps blood.'],
- ['In the food chain grass → rabbit → fox, what is the rabbit?','A consumer that eats plants',['A producer','A predator of foxes','A decomposer'],'Biology',3,6,'Grass is the producer. The rabbit eats it, so it is a herbivore.'],
- ['Which habitat suits a camel best?','Desert',['Arctic ice','Coral reef','Pond'],'Biology',1,4,'Camels can go a long time without water.'],
- ['Why do we need fruit and vegetables?','They give us vitamins and fibre',['They stop us sleeping','They make bones vanish','They have no use'],'Biology',1,4,'Fruit and vegetables keep the body healthy.'],
- ['Which gas do we breathe out more of than we breathe in?','Carbon dioxide',['Oxygen','Helium','Hydrogen'],'Biology',4,6,'Our bodies use oxygen and make carbon dioxide.'],
- ['What is photosynthesis?','How plants make food using light',['How animals sleep','How rocks melt','How water freezes'],'Biology',5,6,'Plants use light, water and carbon dioxide to make sugar.'],
- ['What are microorganisms?','Living things too small to see without a microscope',['Very large animals','Types of rock','Tiny robots'],'Biology',5,6,'Bacteria and some fungi are microorganisms.'],
- ['Which material is best for a window?','Glass',['Wood','Metal','Cardboard'],'Chemistry',1,3,'Glass is transparent, so light passes through.'],
- ['Which object is magnetic?','An iron nail',['A plastic spoon','A wooden block','A glass marble'],'Chemistry',2,5,'Iron is attracted to magnets.'],
- ['Ice melting into water is a change from…','Solid to liquid',['Liquid to gas','Gas to solid','Liquid to solid'],'Chemistry',3,6,'Ice is solid water. When it warms, it melts.'],
- ['What happens to water when it boils?','It turns into water vapour (a gas)',['It becomes ice','It turns into salt','Nothing changes'],'Chemistry',3,6,'Boiling water turns quickly into a gas.'],
- ['Which material is waterproof?','Plastic',['Paper','Cotton','Tissue'],'Chemistry',1,3,'Plastic does not let water through.'],
- ['Salt stirred into water until you can\'t see it makes a…','Solution',['Rock','Gas','Magnet'],'Chemistry',4,6,'The salt dissolves, making a solution.'],
- ['Which of these is a liquid?','Milk',['A stone','A wooden spoon','Steam'],'Chemistry',2,4,'Milk flows and takes the shape of its container.'],
- ['A push or a pull is called a…','Force',['Light','Sound','Shadow'],'Physics',1,4,'Forces are pushes and pulls.'],
- ['Which of these is a light source?','The Sun',['The Moon','A mirror','A shiny coin'],'Physics',1,5,'The Sun makes its own light. The Moon only reflects it.'],
- ['How is a shadow made?','An object blocks the light',['Light bends around it','The object glows','Sound hits a wall'],'Physics',2,5,'Light travels in straight lines, so the blocked area stays dark.'],
- ['Sound is made when things…','Vibrate',['Freeze','Melt','Glow'],'Physics',3,6,'Vibrations travel through the air to your ears.'],
- ['What does a bulb need to light up in a circuit?','A complete loop with a battery',['A gap in the wire','Only a bulb','Water in the wire'],'Physics',3,6,'Electricity flows only around a complete circuit.'],
- ['Which force pulls things down towards Earth?','Gravity',['Friction','Magnetism','Wind'],'Physics',3,6,'Gravity pulls objects towards the centre of the Earth.'],
- ['On which surface is friction greatest?','Rough carpet',['Smooth ice','Wet glass','Polished floor'],'Physics',3,6,'Rough surfaces grip more.'],
- ['What causes day and night?','Earth spinning on its axis',['The Sun circling Earth each day','The Moon covering the Sun','Clouds blocking light'],'Earth & Space',3,6,'As Earth spins, your side faces the Sun or away from it.'],
- ['How long does Earth take to travel around the Sun?','About one year',['One day','One month','One week'],'Earth & Space',4,6,'One full orbit takes about 365 days.'],
- ['Which of these is a type of rock?','Granite',['Plastic','Rubber','Wool'],'Earth & Space',3,5,'Granite is a hard rock formed from cooled magma.'],
- ['What is the Moon?','Earth\'s natural satellite',['A star','A planet','A cloud'],'Earth & Space',2,6,'The Moon orbits the Earth.'],
- ['Which tool measures temperature?','Thermometer',['Ruler','Compass','Clock'],'Earth & Space',2,5,'A thermometer measures how hot or cold something is.']
-].map(r=>({q:r[0],a:r[1],w:r[2],s:r[3],lo:r[4],hi:r[5],why:r[6]}));
-const P1='Lina the parrot lived on a small green island. Every morning she flew to the tallest palm tree to look for ships. One day she saw a red sail far away. She flapped her wings and squawked to wake the whole crew.';
-const P2='The old lighthouse had stood on the cliff for two hundred years. Its keeper, Mr Osei, climbed one hundred and twelve steps every evening to light the lamp. Although his knees ached, he never missed a night, because he knew sailors trusted the light to guide them safely past the jagged rocks.';
-const ENG=[
- ['Which word is a noun (a naming word)?','ship',['run','happy','quickly'],'Grammar',1,4,'A noun names a person, place or thing.'],
- ['Which word is a verb (a doing word)?','jump',['blue','table','soft'],'Grammar',1,4,'"Jump" is something you do.'],
- ['Which word is an adjective (it describes a noun)?','shiny',['sail','island','under'],'Grammar',2,5,'"Shiny" describes a noun, like a shiny coin.'],
- ['What is the past tense of "run"?','ran',['runned','running','runs'],'Grammar',2,5,'Today I run, yesterday I ran.'],
- ['What is the plural of "box"?','boxes',['boxs','boxies','boxen'],'Spelling',2,4,'Words ending in x add -es.'],
- ['What is the plural of "child"?','children',['childs','childes','childrens'],'Spelling',2,5,'"Child" has an irregular plural.'],
- ['Which sentence is punctuated correctly?','Where is the treasure map?',['where is the treasure map?','Where is the treasure map.','Where is the treasure map'],'Grammar',1,4,'Start with a capital letter. End a question with a question mark.'],
- ['Find the adverb: "The parrot flew quickly over the sea."','quickly',['parrot','sea','flew'],'Grammar',3,6,'An adverb tells us how something happened.'],
- ['Pick the best joining word: "I wanted to swim ___ the water was too cold."','but',['so','or','because'],'Grammar',3,6,'"But" joins two ideas that contrast.'],
- ['Choose the right word: "The pirates ___ on the deck yesterday."','were',['was','is','be'],'Grammar',2,5,'"Pirates" is plural and "yesterday" is past, so we use "were".'],
- ['Which word is a pronoun?','they',['treasure','swim','green'],'Grammar',3,6,'A pronoun replaces a noun, like they, she or we.'],
- ['How do you write "the map that belongs to the captain"?','the captain\'s map',['the captains map','the captains\' map','the captain map'],'Grammar',4,6,'One captain owns the map, so add \'s.'],
- ['Which sentence uses speech marks correctly?','"Land ahead!" shouted Mia.',['"Land ahead! shouted Mia."','Land ahead! "shouted Mia."','"Land" ahead! shouted Mia.'],'Grammar',4,6,'Only the spoken words go inside the speech marks.'],
- ['What is the prefix in "unhappy"?','un',['happy','py','unh'],'Vocabulary',3,6,'A prefix goes at the start. "Un" means not.'],
- ['Which sentence starts with a fronted adverbial?','After lunch, we explored the cave.',['We explored the cave after lunch.','The cave was dark.','We explored, after lunch the cave.'],'Grammar',5,6,'"After lunch," comes first and tells us when.'],
- ['Which word means the same as "big"?','large',['tiny','quick','cold'],'Vocabulary',1,3,'"Large" and "big" are synonyms.'],
- ['Which word is the opposite of "brave"?','scared',['bold','strong','kind'],'Vocabulary',2,4,'"Scared" is the opposite of "brave".'],
- ['Which word means the same as "shout"?','yell',['whisper','mumble','sleep'],'Vocabulary',2,5,'"Yell" and "shout" are synonyms.'],
- ['Which word is the opposite of "ancient"?','modern',['old','dusty','huge'],'Vocabulary',4,6,'"Ancient" means very old. "Modern" means new.'],
- ['What does "enormous" mean?','very big',['very small','very fast','very wet'],'Vocabulary',3,5,'An enormous wave is a very big wave.'],
- ['Which word means "to look at something carefully"?','examine',['ignore','glance','forget'],'Vocabulary',5,6,'To examine is to look closely.'],
- ['Which spelling is correct?','because',['becuase','becos','beacause'],'Spelling',1,4,'Remember: be-cause.'],
- ['Which spelling is correct?','friend',['freind','frend','friand'],'Spelling',2,4,'"Fri-end": the i comes before the e.'],
- ['Which spelling is correct?','beautiful',['beutiful','beautifull','beatiful'],'Spelling',3,5,'Beau-ti-ful, with one l at the end.'],
- ['Which spelling is correct?','necessary',['neccessary','necesary','nessesary'],'Spelling',5,6,'One collar (c), two sleeves (ss).'],
- ['Which word rhymes with "boat"?','coat',['boot','bat','bolt'],'Spelling',1,2,'Boat and coat both end with "oat".'],
- ['How many syllables are in "pirate"?','2',['1','3','4'],'Spelling',1,3,'Pi-rate. Clap it: two beats.'],
- ['Where did Lina live?','On a small green island',['On a big ship','In a cave','In a city'],'Reading',1,4,'The first sentence tells us.',P1],
- ['What colour was the sail Lina saw?','red',['blue','green','white'],'Reading',1,4,'She saw a red sail far away.',P1],
- ['Why did Lina squawk?','To wake the crew',['She was hungry','To scare the fish','She was singing'],'Reading',1,4,'She squawked to wake the whole crew.',P1],
- ['Which word tells us how Lina moved her wings?','flapped',['lived','saw','wake'],'Reading',2,4,'She flapped her wings.',P1],
- ['How many steps did Mr Osei climb each evening?','112',['200','12','120'],'Reading',4,6,'One hundred and twelve = 112.',P2],
- ['Why did Mr Osei never miss a night?','Sailors relied on the light to stay safe',['He liked climbing stairs','The lamp lit itself','He lived at the top'],'Reading',4,6,'Sailors trusted the light to guide them past the rocks.',P2],
- ['What does "jagged" most likely mean?','rough and sharp',['smooth and round','soft and warm','bright and shiny'],'Reading',4,6,'Jagged rocks have sharp, uneven edges.',P2],
- ['Which word shows the climb was hard for Mr Osei?','ached',['stood','guide','trusted'],'Reading',4,6,'His knees ached.',P2]
-].map(r=>({q:r[0],a:r[1],w:r[2],s:r[3],lo:r[4],hi:r[5],why:r[6],p:r[7]}));
-function buildQuest(key,n=6){const st=P().stage;let qs;
-  if(key==='math')qs=shuffle(MGEN).slice(0,n).map(g=>M[g](st));
-  else{const bank=key==='sci'?SCI:ENG;let pool=bank.filter(b=>st>=b.lo&&st<=b.hi);if(pool.length<n)pool=bank;qs=shuffle(pool).slice(0,n)}
-  return qs.map(q=>{const w=[...new Set(q.w.map(String))].filter(x=>x!==String(q.a)).slice(0,3);return {...q,a:String(q.a),opts:shuffle([String(q.a),...w])}})}
-
-/* ============ views ============ */
+/* ===================== VIEWS ===================== */
 const app=document.getElementById('app');
 let view='who',Q=null,grownOpen=false,lbMode='week',editing=null;
 const TABS=[
@@ -542,6 +809,7 @@ const TABS=[
  {v:'grown',l:'Grown-ups',ico:['...kk...','..kkkk..','..k..k..','.yyyyyy.','.yyKKyy.','.yyKKyy.','.yyyyyy.','........'],pal:{k:'#cfd6e6',y:'#ffc531',K:'#2a1f4a'}}
 ];
 document.getElementById('tabsIn').innerHTML=TABS.map(t=>`<button data-view="${t.v}">${pixel(t.ico,t.pal,'')}<span>${t.l}</span></button>`).join('');
+const STAGE_AGE=['5–6','6–7','7–8','8–9','9–10','10–11'];
 
 function renderChrome(){const p=P(),inGame=!!p&&view!=='who';
   document.getElementById('bar').hidden=!inGame;document.getElementById('tabs').hidden=!inGame||view==='quest';
@@ -553,8 +821,7 @@ function renderChrome(){const p=P(),inGame=!!p&&view!=='who';
   document.querySelectorAll('.tabs [data-view]').forEach(b=>b.setAttribute('aria-current',String(b.dataset.view===view)))}
 
 /* --- who's playing --- */
-function renderWho(){
-  if(editing){return renderNewPlayer()}
+function renderWho(){if(editing)return renderNewPlayer();
   app.innerHTML=`<div style="text-align:center;margin:10px 0 22px"><h1 style="color:#fff;font-size:clamp(32px,6vw,52px);text-shadow:0 4px 0 rgba(0,0,0,.2)">Brick Bay Academy</h1>
    <p style="color:#fff;font-weight:700;margin:6px 0 0">Who's playing today?</p></div>
    <div class="players">${F.profiles.map(p=>`<button class="player" data-play="${p.id}"><span class="face">${avSVG(p.avatar)}</span><b>${esc(p.name)}</b><small>Level ${lvlOf(p)} · ${fmt(p.coins)} coins</small></button>`).join('')}
@@ -574,54 +841,123 @@ function renderNewPlayer(){const sel=editing.avatar||'alien';
    const p=newPlayer(name,+document.getElementById('np-stage').value,sel);F.profiles.push(p);F.active=p.id;editing=null;save();view='map';render();toast(`Welcome aboard, ${name}!`)}}
 
 /* --- map --- */
+function modePill(p,k){const a=p.adj[k];return a>0?'<span class="mode up">Challenge mode</span>':a<0?'<span class="mode down">Practice mode</span>':''}
 function renderMap(){const p=P();rollDay(p);const goal=15,n=Math.min(p.today.n,goal);
   const next=F.rewards.slice().sort((a,b)=>a.cost-b.cost).find(r=>r.cost>p.coins)||null;
+  const due=dueReviews(p).length,total=p.review.length,mystery=p.bosses>0,capHit=F.coinCap&&p.today.coins>=F.coinCap;
   app.innerHTML=`<section class="hero">
    <div class="hero-main"><div class="big-face">${avSVG(p.avatar)}</div><div><h1>Ahoy, <span>${esc(p.name)}</span>!</h1>
-    <p>Answer questions to earn XP and coins. Save coins for real rewards, or hatch pets for your crew.</p>
-    <button class="btn" data-go="${pick(['math','sci','eng'])}">Surprise quest</button></div></div>
+    <p>Earn XP and coins. Save coins for real rewards, hatch pets, or beat island bosses.</p>
+    <button class="btn" data-go="${pick(SUBJS)}">Surprise quest</button></div></div>
    <div class="card goal"><span class="eyebrow">Today's mission</span><h2>${n>=goal?'Mission complete!':`Answer ${goal} questions`}</h2>
     <div class="bricks" aria-label="${n} of ${goal}">${Array.from({length:goal},(_,i)=>`<i class="${i<n?'on':''}"></i>`).join('')}</div>
-    <p class="muted" style="margin:0">${p.streak?`${p.streak}-day streak. Keep it going!`:'Finish a quest today to start a streak.'}</p>
+    <p class="muted" style="margin:0">${p.streak?`${p.streak}-day streak. Keep it going!`:'Finish a quest today to start a streak.'}${F.coinCap?` Coins today: ${p.today.coins}/${F.coinCap}.`:''}</p>
+    ${capHit?'<p class="note">You reached today\'s coin limit. XP and boss rewards still count!</p>':''}
     ${next?`<div class="next-reward">${icoSVG(next.icon)}<div style="flex:1;min-width:0"><b>${esc(next.name)}</b><div class="muted" style="margin:0;font-size:14px">${fmt(next.cost-p.coins)} more coins</div><div class="t"><i style="width:${Math.round(p.coins/next.cost*100)}%"></i></div></div></div>`:''}
    </div></section>
   <h2 class="sec-title">The islands</h2>
-  <section class="islands">${Object.entries(SUBJ).map(([k,s])=>`<article class="card island">${islandSVG(k)}<span class="subj ${s.cls}">${s.subject}</span><h3>${s.name}</h3>
+  <section class="islands">${SUBJS.map(k=>{const s=SUBJ[k],bossReady=p.flags[k]>=5;return `<article class="card island">${islandSVG(k)}
+   <div class="row" style="justify-content:space-between"><span class="subj ${s.cls}">${s.subject} · Island level ${p.tier[k]}</span>${modePill(p,k)}</div><h3>${s.name}</h3>
    <div class="tags">${s.strands.map(t=>`<span>${t}</span>`).join('')}</div>
-   <div class="isl-foot"><div class="stars">${Array.from({length:5},(_,i)=>`<i class="${i<Math.min(5,p.quests[k])?'on':''}"></i>`).join('')}</div><button class="btn ${s.btn}" data-go="${k}">Set sail</button></div></article>`).join('')}</section>`}
+   <div class="isl-foot"><div class="stars" aria-label="${Math.min(5,p.flags[k])} of 5 flags to the boss">${Array.from({length:5},(_,i)=>`<i class="${i<Math.min(5,p.flags[k])?'on':''}"></i>`).join('')}</div>
+   ${bossReady?`<div class="row"><button class="btn sm ghost" data-go="${k}">Practise</button><button class="btn grape" data-boss="${k}">Fight boss!</button></div>`:`<button class="btn ${s.btn}" data-go="${k}">Set sail</button>`}</div>
+   ${bossReady?`<p class="note" style="margin:0">${BOSSES[k].name} is waiting! Beat it to raise the island level.</p>`:`<p class="muted" style="margin:0;font-size:14px">${5-p.flags[k]} more quest${5-p.flags[k]===1?'':'s'} until the boss.</p>`}</article>`}).join('')}</section>
+  <section class="specials">
+   <article class="card special"><div class="sp-ico">${pixel(['.rrrrrr.','rr....rr','r.rr.r.r','r..rr..r','r.r.rr.r','rr....rr','.rrrrrr.','........'],{r:'#ff6b6b'},'')}</div>
+    <div><h3>Fix my mistakes</h3><p class="muted" style="margin:0">${total?`${total} question${total===1?'':'s'} to fix${due?`, ${due} ready now`:''}. Get each one right on 3 different days to master it.`:'No mistakes saved yet. Wrong answers come back here so you can fix them.'}</p></div>
+    <button class="btn red" data-review="1" ${total?'':'disabled'}>Fix them</button></article>
+   <article class="card special ${mystery?'':'locked-card'}"><div class="sp-ico">${pixel(['...gg...','..gggg..','.gg..gg.','....gg..','...gg...','...gg...','........','...gg...'],{g:mystery?'#9b6bff':'#9aa0b8'},'')}</div>
+    <div><h3>Mystery Isle</h3><p class="muted" style="margin:0">${mystery?'Mixed Maths, Science and English, one stage harder. Extra coins for brave sailors.':'Beat any island boss to discover this island.'}</p></div>
+    <button class="btn grape" data-mystery="1" ${mystery?'':'disabled'}>${mystery?'Explore':'Locked'}</button></article>
+  </section>`}
 
-/* --- quest --- */
-function startQuest(key){Q={key,qs:buildQuest(key),i:0,res:[],combo:0,xp:0,c:0,answered:false};view='quest';render()}
-function renderQuest(){const s=SUBJ[Q.key],q=Q.qs[Q.i],L=['A','B','C','D'],lc=[s.col,'var(--sun-dk)','var(--plum)',s.dk];
-  app.innerHTML=`<section class="quest"><div class="q-head" style="background:${s.col}"><h2>${s.name}</h2>
-   <div class="prog">${Q.qs.map((_,i)=>`<i class="${i<Q.i?(Q.res[i]?'ok':'no'):i===Q.i?'now':''}"></i>`).join('')}</div><button class="x" data-view="map">Leave</button></div>
-   <div class="q-body"><div class="q-strand"><span class="eyebrow">${s.subject} · ${q.s}</span><button class="speak" id="speakBtn">Read aloud</button></div>
-   ${q.p?`<div class="passage">${esc(q.p)}</div>`:''}<div class="q-text">${esc(q.q)}</div>
-   <div class="opts">${q.opts.map((o,i)=>`<button class="opt" data-opt="${i}"><b style="background:${lc[i]}">${L[i]}</b><span>${esc(o)}</span></button>`).join('')}</div><div id="fb"></div></div></section>`;
-  document.getElementById('speakBtn').onclick=()=>speak((q.p?q.p+' ':'')+q.q+'. '+q.opts.map((o,i)=>L[i]+': '+o).join('. '));
-  app.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>answer(+b.dataset.opt))}
-function answer(i){if(Q.answered)return;Q.answered=true;const p=P();rollDay(p);const q=Q.qs[Q.i],ok=q.opts[i]===q.a;Q.res[Q.i]=ok;
-  app.querySelectorAll('[data-opt]').forEach((b,j)=>{b.disabled=true;if(q.opts[j]===q.a)b.classList.add('right');else if(j===i)b.classList.add('wrong')});
-  const st=p.stats[Q.key],sk=Q.key+':'+q.s;st.t++;p.strands[sk]=p.strands[sk]||{c:0,t:0};p.strands[sk].t++;p.today.n++;let bonus='';
-  if(ok){st.c++;p.strands[sk].c++;Q.combo++;let c=5;if(Q.combo>=3){c+=3;bonus=`<span class="combo">Combo ×${Q.combo}!</span>`}addXP(10);p.coins+=c;Q.xp+=10;Q.c+=c;sfx.good()}
-  else{Q.combo=0;addXP(2);Q.xp+=2;sfx.bad()}
-  save();renderChrome();const last=Q.i===Q.qs.length-1;
+/* --- quest engine --- */
+function startQuest(mode,key){const p=P();const n=mode==='boss'?8:6;const subj=mode==='normal'||mode==='boss'?key:mode==='mystery'?'mix':'review';
+  const list=buildList(p,mode,key,n);if(!list.length){toast('Nothing to fix right now');return}
+  Q={mode,key:subj,list,i:0,res:[],combo:0,xp:0,c:0,answered:false,boss:mode==='boss'?{hp:6,max:6,hearts:3}:null,quick:0,mastered:0,levelChange:null};view='quest';render()}
+function qColor(){return SUBJ[Q.key]?SUBJ[Q.key]:{name:'Fix my mistakes',col:'var(--brick)',dk:'var(--brick-dk)',btn:'red'}}
+function headHTML(){const s=qColor(),title=Q.mode==='review'?'Fix my mistakes':Q.mode==='boss'?BOSSES[Q.key].name:s.name;
+  const prog=Q.boss?'':`<div class="prog">${Q.list.map((_,i)=>`<i class="${i<Q.i?(Q.res[i]?'ok':'no'):i===Q.i?'now':''}"></i>`).join('')}</div>`;
+  const boss=Q.boss?`<div class="bossbar"><div class="boss-face">${pixel(BOSSES[Q.key].map,BOSSES[Q.key].pal,BOSSES[Q.key].name)}</div><div style="flex:1;min-width:0"><div class="hp"><i style="width:${Q.boss.hp/Q.boss.max*100}%"></i></div><small>Boss health ${Q.boss.hp}/${Q.boss.max}</small></div><div class="hearts">${[0,1,2].map(i=>heartSVG(i<Q.boss.hearts)).join('')}</div></div>`:'';
+  return `<div class="q-head" style="background:${Q.boss?'var(--grape)':s.col}"><h2>${esc(title)}</h2>${prog}<button class="x" data-view="map">Leave</button>${boss}</div>`}
+function renderQuest(){const q=Q.list[Q.i];const s=SUBJ[q.subj];Q.answered=false;Q.shownAt=Date.now();Q.work=null;
+  const L=['A','B','C','D'],lc=['var(--brick)','var(--sun-dk)','var(--plum)','var(--sky-dk)'];let body='';
+  if(q.kind==='mc')body=`<div class="opts ${q.opts.length===2?'two':''}">${q.opts.map((o,i)=>`<button class="opt" data-opt="${i}"><b style="background:${lc[i]}">${L[i]}</b><span>${esc(o)}</span></button>`).join('')}</div>`;
+  if(q.kind==='input')body=`<form class="in-row" id="inForm"><input id="ans" inputmode="${/[a-z]/i.test(q.a)?'text':'decimal'}" autocomplete="off" placeholder="Answer" aria-label="Your answer"><button class="btn ${s.btn}" type="submit">Check</button></form><p class="muted" style="margin:0;font-size:14px">Type the number. No need for commas.</p>`;
+  if(q.kind==='order'||q.kind==='spell'){Q.work={picked:[],pool:q.items.map((t,i)=>i)};body=`<div class="slot" id="slot" aria-label="Your answer"></div><div class="tiles" id="pool"></div><div class="row"><button class="btn ${s.btn}" id="chk" disabled>Check</button><button class="btn ghost" id="clr">Clear</button></div>`}
+  if(q.kind==='match'){Q.work={sel:null,done:new Set(),miss:0};body=`<div class="match"><div class="col" id="mL">${q.pairs.map((p,i)=>`<button class="mt" data-ml="${i}">${esc(p[0])}</button>`).join('')}</div><div class="col" id="mR">${q.right.map((r,i)=>`<button class="mt" data-mr="${i}">${esc(r)}</button>`).join('')}</div></div><p class="muted" style="margin:0;font-size:14px">Tap a word on the left, then its partner on the right.</p>`}
+  const kindLabel={mc:'',input:'Type it',order:'Put in order',spell:'Spell it',match:'Match pairs'}[q.kind];
+  app.innerHTML=`<section class="quest">${headHTML()}<div class="q-body">
+   <div class="q-strand"><span class="eyebrow">${s.subject} · ${q.s}${q.rev?' · <span class="revtag">Mistake to fix</span>':''}${kindLabel?` · ${kindLabel}`:''}</span><button class="speak" id="speakBtn">Read aloud</button></div>
+   ${q.p?`<div class="passage">${esc(q.p)}</div>`:''}<div class="q-text">${esc(q.q)}</div>${q.vis?`<div class="vis">${q.vis}</div>`:''}${body}<div id="fb"></div></div></section>`;
+  document.getElementById('speakBtn').onclick=()=>speak((q.p?q.p+' ':'')+q.q+(q.kind==='mc'?'. '+q.opts.map((o,i)=>L[i]+': '+o).join('. '):''));
+  if(q.kind==='mc')app.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>{const i=+b.dataset.opt;
+    app.querySelectorAll('[data-opt]').forEach((x,j)=>{x.disabled=true;if(q.opts[j]===q.a)x.classList.add('right');else if(j===i)x.classList.add('wrong')});submit(q.opts[i]===q.a,q.opts[i])});
+  if(q.kind==='input'){const f=document.getElementById('inForm'),inp=document.getElementById('ans');setTimeout(()=>inp.focus(),50);
+    f.onsubmit=e=>{e.preventDefault();if(Q.answered||!inp.value.trim())return;inp.disabled=true;f.querySelector('button').disabled=true;const ok=checkInput(q,inp.value);inp.classList.add(ok?'right':'wrong');submit(ok,inp.value)}}
+  if(q.kind==='order'||q.kind==='spell')drawTiles(q);
+  if(q.kind==='match')bindMatch(q)}
+function drawTiles(q){const w=Q.work,sep=q.kind==='spell';
+  document.getElementById('slot').innerHTML=w.picked.length?w.picked.map((i,k)=>`<button class="tile ${sep?'letter':''} in" data-back="${k}">${esc(q.items[i])}</button>`).join(q.kind==='order'&&q.subj!=='eng'||q.id==='cycle'?'<span class="arrow">→</span>':''):`<span class="muted" style="margin:0">${sep?'Tap the letters to spell the word':'Tap the tiles in the right order'}</span>`;
+  document.getElementById('pool').innerHTML=w.pool.map(i=>`<button class="tile ${sep?'letter':''}" data-take="${i}">${esc(q.items[i])}</button>`).join('');
+  document.getElementById('chk').disabled=w.pool.length>0||Q.answered;
+  app.querySelectorAll('[data-take]').forEach(b=>b.onclick=()=>{if(Q.answered)return;const i=+b.dataset.take;w.pool=w.pool.filter(x=>x!==i);w.picked.push(i);sfx.tap();drawTiles(q)});
+  app.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>{if(Q.answered)return;const k=+b.dataset.back;w.pool.push(w.picked[k]);w.picked.splice(k,1);drawTiles(q)});
+  document.getElementById('clr').onclick=()=>{if(Q.answered)return;w.pool=w.pool.concat(w.picked);w.picked=[];drawTiles(q)};
+  document.getElementById('chk').onclick=()=>{if(Q.answered)return;const given=w.picked.map(i=>q.items[i]);const ok=sep?given.join('')===q.a:given.join('|')===q.a.join('|');
+    document.getElementById('slot').classList.add(ok?'right':'wrong');app.querySelectorAll('.tile').forEach(t=>t.disabled=true);document.getElementById('chk').disabled=true;submit(ok,sep?given.join(''):given.join(' → '))}}
+function bindMatch(q){const w=Q.work;
+  const L=app.querySelectorAll('[data-ml]'),Rb=app.querySelectorAll('[data-mr]');
+  L.forEach(b=>b.onclick=()=>{if(Q.answered||w.done.has(+b.dataset.ml))return;L.forEach(x=>x.classList.remove('sel'));b.classList.add('sel');w.sel=+b.dataset.ml;sfx.tap()});
+  Rb.forEach(b=>b.onclick=()=>{if(Q.answered||w.sel===null||b.classList.contains('right'))return;const li=w.sel,val=q.right[+b.dataset.mr];
+    if(q.pairs[li][1]===val){w.done.add(li);L[li].classList.remove('sel');L[li].classList.add('right');b.classList.add('right');L[li].disabled=true;b.disabled=true;w.sel=null;sfx.good();
+      if(w.done.size===q.pairs.length)submit(w.miss===0,w.miss?`${w.miss} wrong tr${w.miss===1?'y':'ies'}`:'all matched')}
+    else{w.miss++;b.classList.add('wrong');L[li].classList.add('wrong');sfx.bad();setTimeout(()=>{b.classList.remove('wrong');L[li].classList.remove('wrong')},450)}})}
+
+function answerText(q){if(q.kind==='order')return q.a.join(' → ');if(q.kind==='match')return q.pairs.map(p=>`${p[0]} = ${p[1]}`).join(', ');return q.a}
+function submit(ok,given){if(Q.answered)return;Q.answered=true;const p=P();rollDay(p);const q=Q.list[Q.i];Q.res[Q.i]=ok;
+  const st=p.stats[q.subj],sk=q.subj+':'+q.s;st.t++;p.strands[sk]=p.strands[sk]||{c:0,t:0};p.strands[sk].t++;p.today.n++;remember(p,q);
+  let extra='',coinsGot=0;
+  const minT=q.kind==='mc'?Math.min(4000,1200+q.q.length*22+(q.p?q.p.length*8:0)):0,tooQuick=ok&&minT&&(Date.now()-Q.shownAt)<minT;
+  if(ok){st.c++;p.strands[sk].c++;Q.combo++;
+    if(tooQuick){Q.quick++;addXP(4);Q.xp+=4;extra=`<span class="note">Too quick to count for coins. Read carefully first!</span>`}
+    else{let c=5+(Q.combo>=3?3:0)+(q.rev?3:0);coinsGot=earn(p,c);Q.c+=coinsGot;addXP(10);Q.xp+=10;if(Q.combo>=3)extra=`<span class="combo">Combo ×${Q.combo}!</span>`}
+    if(q.rev){const r=reviewRight(p,q);if(r==='mastered'){Q.mastered++;extra+=`<span class="combo">Mastered!</span>`}}
+    if(Q.boss){Q.boss.hp--;sfx.hit()}else sfx.good()}
+  else{Q.combo=0;addXP(2);Q.xp+=2;addMistake(p,q);sfx.bad();if(Q.boss)Q.boss.hearts--}
+  if(q.subj&&Q.mode!=='review'){const ch=track(p,q.subj,ok);if(ch)Q.levelChange={subj:q.subj,dir:ch}}
+  if(F.coinCap&&ok&&!tooQuick&&coinsGot===0)extra+=`<span class="note">Daily coin limit reached. XP still counts.</span>`;
+  save();renderChrome();
+  const bossOver=Q.boss&&(Q.boss.hp<=0||Q.boss.hearts<=0);
+  if(Q.boss&&!bossOver&&Q.i===Q.list.length-1){Q.list.push(genOne(Q.key,effStage(p,Q.key),new Set(Q.list.map(x=>x.sig))))}
+  const last=bossOver||(!Q.boss&&Q.i===Q.list.length-1);
+  if(Q.boss){const hp=app.querySelector('.hp i');if(hp)hp.style.width=(Math.max(0,Q.boss.hp)/Q.boss.max*100)+'%';const sm=app.querySelector('.bossbar small');if(sm)sm.textContent=`Boss health ${Math.max(0,Q.boss.hp)}/${Q.boss.max}`;const hs=app.querySelector('.hearts');if(hs)hs.innerHTML=[0,1,2].map(i=>heartSVG(i<Q.boss.hearts)).join('');const bf=app.querySelector('.boss-face');if(bf){bf.classList.remove('hit');void bf.offsetWidth;if(ok)bf.classList.add('hit')}}
   document.getElementById('fb').innerHTML=`<div class="fb ${ok?'good':'bad'}"><div><strong>${ok?pick(['Brilliant!','Treasure found!','Spot on!','Full sails!']):pick(['Nearly there!','Good try!','Not quite!'])}</strong>
-   <p>${ok?'':`The answer is <b>${esc(q.a)}</b>. `}${esc(q.why)}</p></div>${bonus}<button class="btn ${SUBJ[Q.key].btn}" id="nextBtn">${last?'See treasure':'Next'}</button></div>`;
-  const nb=document.getElementById('nextBtn');nb.focus();nb.onclick=()=>{if(last)finish();else{Q.i++;Q.answered=false;renderQuest()}}}
+   <p>${ok?'':`The answer is <b>${esc(answerText(q))}</b>. `}${esc(q.why)}</p>${!ok?'<p class="muted" style="margin:2px 0 0;font-size:14px">This question will come back in Fix my mistakes.</p>':''}${extra?`<div class="row" style="margin-top:4px">${extra}</div>`:''}</div>
+   <button class="btn ${Q.boss?'grape':qColor().btn}" id="nextBtn">${last?'See treasure':'Next'}</button></div>`;
+  const nb=document.getElementById('nextBtn');nb.focus();nb.onclick=()=>{if(last)finish();else{Q.i++;renderQuest()}}}
 function addXP(x){const p=P();const before=lvlOf(p);p.xp+=x;p.week.xp+=x;const after=lvlOf(p);
-  if(after>before){p.coins+=20;const un=AVATARS.find(a=>a.lvl===after);setTimeout(()=>{toast(`Level ${after}! +20 coins${un?`. New character: ${un.name}!`:''}`);sfx.win();confetti()},250)}}
-function finish(){const p=P(),right=Q.res.filter(Boolean).length,total=Q.qs.length;p.quests[Q.key]++;
+  if(after>before){earn(p,20,true);const un=AVATARS.find(a=>a.lvl===after);setTimeout(()=>{toast(`Level ${after}! +20 coins${un?`. New character: ${un.name}!`:''}`);sfx.win();confetti()},250)}}
+function finish(){const p=P(),answered=Q.res.length,right=Q.res.filter(Boolean).length,acc=right/answered;let title,msg='',bonus=0;
   const t=todayKey();if(p.lastDay!==t){p.streak=p.lastDay===yesterdayKey()?p.streak+1:1;p.lastDay=t}
-  if(right===total){p.coins+=10;Q.c+=10}save();renderChrome();sfx.win();if(right>=total-1)confetti();const s=SUBJ[Q.key];
-  app.innerHTML=`<section class="quest"><div class="q-head" style="background:${s.col}"><h2>${s.name}</h2></div><div class="result">
-   <div class="face">${avSVG(p.avatar)}</div><h2>${right===total?'Perfect voyage!':right>=total/2?'Great sailing!':'Every captain practises!'}</h2>
-   <p>You got <b>${right} of ${total}</b> right${right===total?' and won a 10-coin perfect bonus':''}.</p>
+  if(Q.mode==='normal'){p.quests[Q.key]++;p.flags[Q.key]=Math.min(5,p.flags[Q.key]+1)}
+  if(Q.mode==='boss'){const won=Q.boss.hp<=0;if(won){p.tier[Q.key]++;p.flags[Q.key]=0;p.bosses++;bonus=earn(p,60,true);title=`You beat ${BOSSES[Q.key].name}!`;msg=`${SUBJ[Q.key].name} is now island level ${p.tier[Q.key]}.${p.bosses===1?' Mystery Isle has appeared on the map!':''}`}
+    else{title=`${BOSSES[Q.key].name} got away!`;msg='Practise a little, then try again. The boss is still waiting.'}}
+  else{if(acc>=.8&&Q.quick<2){bonus=earn(p,acc===1?20:10);msg=`${acc===1?'Perfect':'80%+'} bonus: +${bonus} coins.`}else if(Q.quick>=2)msg='Some answers were too quick, so no quest bonus this time.';
+    if(Q.mode==='mystery')bonus+=earn(p,10);
+    title=acc===1?'Perfect voyage!':acc>=.5?'Great sailing!':'Every captain practises!'}
+  if(Q.mastered)msg+=` You mastered ${Q.mastered} mistake${Q.mastered===1?'':'s'}!`;
+  if(Q.levelChange){const s=SUBJ[Q.levelChange.subj].subject;msg+=Q.levelChange.dir==='up'?` ${s} is getting harder: you earned Challenge mode!`:` ${s} will be a bit easier for a while.`}
+  Q.c+=bonus;save();renderChrome();sfx.win();if(acc>=.8||(Q.boss&&Q.boss.hp<=0))confetti();const s=Q.boss?{col:'var(--grape)',btn:'grape'}:qColor();
+  const again=Q.mode==='boss'?(Q.boss.hp<=0?`<button class="btn ${SUBJ[Q.key].btn}" data-go="${Q.key}">Keep sailing</button>`:`<button class="btn grape" data-boss="${Q.key}">Try again</button>`):Q.mode==='review'?'<button class="btn red" data-review="1">Fix more</button>':Q.mode==='mystery'?'<button class="btn grape" data-mystery="1">Explore again</button>':`<button class="btn ${s.btn}" data-go="${Q.key}">Sail again</button>`;
+  app.innerHTML=`<section class="quest"><div class="q-head" style="background:${s.col}"><h2>${Q.mode==='boss'?'Boss battle':Q.mode==='review'?'Fix my mistakes':esc(qColor().name)}</h2></div><div class="result">
+   <div class="face">${Q.boss&&Q.boss.hp<=0?pixel(BOSSES[Q.key].map,BOSSES[Q.key].pal,''):avSVG(p.avatar)}</div><h2>${title}</h2>
+   <p>You got <b>${right} of ${answered}</b> right. ${esc(msg)}</p>
    <div class="stats3"><div><b>+${Q.xp}</b><small>XP</small></div><div><b>+${Q.c}</b><small>coins</small></div><div><b>${p.streak}</b><small>day streak</small></div></div>
-   <div class="row" style="justify-content:center;margin-top:8px"><button class="btn ${s.btn}" data-go="${Q.key}">Sail again</button><button class="btn" data-view="shop">Rewards</button><button class="btn ghost" data-view="map">Back to islands</button></div></div></section>`;
+   <div class="row" style="justify-content:center;margin-top:8px">${again}<button class="btn" data-view="shop">Rewards</button><button class="btn ghost" data-view="map">Islands</button></div></div></section>`;
   document.getElementById('tabs').hidden=false}
 
-/* --- crew: character + pets --- */
+/* --- crew --- */
 function renderCrew(newPet){const p=P(),lvl=lvlOf(p),left=PETS.filter(m=>!p.pets.includes(m.id));
   app.innerHTML=`<section class="card"><h2 style="font-size:26px">Your character</h2><p class="muted">Level up to unlock more. You're level ${lvl}.</p>
    <div class="avatars">${AVATARS.map(a=>{const lock=a.lvl>lvl;return `<button class="av ${lock?'locked':''}" ${lock?'disabled':''} data-av="${a.id}" aria-pressed="${a.id===p.avatar}">${avSVG(a.id)}<span>${a.name.split(' ')[0]}</span><small>${lock?`Level ${a.lvl}`:a.name.split(' the ')[1]||''}</small></button>`}).join('')}</div></section>
@@ -634,7 +970,7 @@ function renderCrew(newPet){const p=P(),lvl=lvlOf(p),left=PETS.filter(m=>!p.pets
   document.getElementById('hatchBtn').onclick=()=>{if(p.coins<50||!left.length)return;p.coins-=50;const m=pick(left);p.pets.push(m.id);save();
    document.getElementById('egg').classList.add('shake');sfx.coin();setTimeout(()=>{renderChrome();renderCrew(m.id);toast(`${m.name} joined your crew!`);sfx.win();confetti()},900)}}
 
-/* --- rewards shop --- */
+/* --- rewards --- */
 function renderShop(){const p=P(),mine=F.claims.filter(c=>c.pid===p.id).sort((a,b)=>b.at-a.at).slice(0,8);
   app.innerHTML=`<section class="card wallet"><div><span class="eyebrow">My coins</span><div class="big"><i class="coin"></i>${fmt(p.coins)}</div></div>
    <p class="muted" style="flex:1 1 240px">Claim a reward and a grown-up will approve it. The coins come back if they say no.</p></section>
@@ -652,42 +988,48 @@ function renderLeaders(){const rows=F.profiles.map(p=>({p,score:lbMode==='week'?
   app.innerHTML=`<h2 class="sec-title" style="margin-top:4px">Family leaderboard</h2>
    <div class="seg" role="group"><button data-lb="week" aria-pressed="${lbMode==='week'}">This week</button><button data-lb="all" aria-pressed="${lbMode==='all'}">All time</button></div>
    <section class="board">${rows.map((r,i)=>`<div class="card lrow ${r.p.id===F.active?'me':''}"><span class="rank ${i<3?'r'+(i+1):''}">${i+1}</span><span class="face">${avSVG(r.p.avatar)}</span>
-    <div style="min-width:0"><b>${esc(r.p.name)}</b><small>Level ${lvlOf(r.p)} · ${r.p.pets.length} pets · ${r.p.streak}-day streak</small></div><span class="score">${fmt(r.score)}<small style="display:block;font-family:var(--body);font-size:12px">XP</small></span></div>`).join('')}</section>
+    <div style="min-width:0"><b>${esc(r.p.name)}</b><small>Level ${lvlOf(r.p)} · ${r.p.bosses} boss${r.p.bosses===1?'':'es'} beaten · ${r.p.streak}-day streak</small></div><span class="score">${fmt(r.score)}<small style="display:block;font-family:var(--body);font-size:12px">XP</small></span></div>`).join('')}</section>
    <p style="color:#fff;font-weight:700;margin-top:14px">${F.profiles.length<2?'Add a brother, sister or cousin in Grown-ups to compete. ':''}The weekly board resets every Monday.</p>`;
   app.querySelectorAll('[data-lb]').forEach(b=>b.onclick=()=>{lbMode=b.dataset.lb;renderLeaders()})}
 
 /* --- grown-ups --- */
-const STAGE_AGE=['5–6','6–7','7–8','8–9','9–10','10–11'];
 function renderGrown(){
   if(F.pin&&!grownOpen){app.innerHTML=`<div class="card pin"><h2>Grown-ups only</h2><p class="muted">Enter the 4-digit parent PIN.</p>
    <input id="pinIn" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="Parent PIN"><button class="btn" id="pinGo">Open</button></div>`;
    const go=()=>{if(document.getElementById('pinIn').value===F.pin){grownOpen=true;renderGrown()}else{toast('That PIN is not right');sfx.bad()}};
    document.getElementById('pinGo').onclick=go;document.getElementById('pinIn').onkeydown=e=>{if(e.key==='Enter')go()};document.getElementById('pinIn').focus();return}
-  const pend=F.claims.filter(c=>c.status==='pending'),pname=id=>(F.profiles.find(p=>p.id===id)||{name:'Removed player'}).name,pct=o=>o.t?Math.round(o.c/o.t*100):0;
-  app.innerHTML=`
+  const pend=F.claims.filter(c=>c.status==='pending'),pname=id=>(F.profiles.find(p=>p.id===id)||{name:'Removed player'}).name,pct=o=>o.t?Math.round(o.c/o.t*100):0,me=P();
+  const pinCard=`<section class="card gsec ${F.pin?'':'urgent'}"><h2>Parent PIN</h2><p class="muted">${F.pin?'This tab is locked with a PIN.':'Set a PIN first. Without it, kids can open this tab and approve their own rewards.'}</p>
+   <div class="row" style="margin-top:10px"><input id="pinSet" type="password" inputmode="numeric" maxlength="4" placeholder="4 digits" style="max-width:160px" aria-label="New PIN"><button class="btn sm" id="pinSave">${F.pin?'Change PIN':'Set PIN'}</button>${F.pin?'<button class="btn sm ghost" id="pinLock">Lock now</button>':''}</div></section>`;
+  app.innerHTML=`${F.pin?'':pinCard}
   <section class="card gsec"><h2>Rewards to approve</h2>${pend.length?`<div class="list">${pend.map(c=>`<div class="li">${icoSVG(c.icon)}<div class="grow"><b>${esc(pname(c.pid))}</b> wants <b>${esc(c.name)}</b><div class="muted" style="margin:0;font-size:14px">${fmt(c.cost)} coins</div></div>
    <button class="btn sm green" data-ok="${c.id}">Approve</button><button class="btn sm ghost" data-no="${c.id}">Decline &amp; refund</button></div>`).join('')}</div>`:'<p class="muted">Nothing waiting. Claims from the Rewards tab show up here.</p>'}</section>
 
-  <section class="card gsec"><h2>Players</h2><p class="muted">Each child gets their own progress. Change a stage any time.</p>
-   <div class="list">${F.profiles.map(p=>`<div class="li"><span style="width:44px">${avSVG(p.avatar)}</span><div class="grow"><b>${esc(p.name)}</b><div class="muted" style="margin:0;font-size:14px">Level ${lvlOf(p)} · ${fmt(p.coins)} coins</div></div>
+  <section class="card gsec"><h2>Progress for ${esc(me.name)}</h2>
+   ${SUBJS.map(k=>{const s=SUBJ[k],e=effStage(me,k);return `<div class="acc-row"><b style="text-align:left">${s.subject}</b><div class="t"><i style="width:${pct(me.stats[k])}%;background:${s.col}"></i></div><b>${me.stats[k].t?pct(me.stats[k])+'%':'—'}</b></div>
+    <p class="muted" style="margin:0 0 4px;font-size:14px">Playing at Stage ${e}${e!==me.stage?` (set to ${me.stage}, adjusted ${e>me.stage?'up':'down'} by results)`:''} · island level ${me.tier[k]}</p>`}).join('')}
+   <p class="muted">${me.review.length} mistake${me.review.length===1?'':'s'} waiting to be fixed · ${me.bosses} boss${me.bosses===1?'':'es'} beaten.</p>
+   ${(()=>{const rows=Object.entries(me.strands).map(([k,v])=>{const [sub,str]=k.split(':');return {sub,str,...v,p:pct(v)}}).filter(r=>SUBJ[r.sub]).sort((a,b)=>a.p-b.p);
+    return rows.length?`<div class="tbl-wrap"><table><thead><tr><th>Subject</th><th>Topic</th><th>Right</th><th>Status</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${SUBJ[r.sub].subject}</td><td>${r.str}</td><td>${r.c}/${r.t} (${r.p}%)</td><td><span class="chip ${r.p>=80?'ok':r.p>=55?'wait':'no'}">${r.p>=80?'Strong':r.p>=55?'Getting there':'Needs practice'}</span></td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Topics appear after the first quest, weakest first.</p>'})()}</section>
+
+  <section class="card gsec"><h2>Players</h2><p class="muted">Each child gets their own progress. The stage is a starting point; the game moves up or down one stage based on results.</p>
+   <div class="list">${F.profiles.map(p=>`<div class="li"><span style="width:44px">${avSVG(p.avatar)}</span><div class="grow"><b>${esc(p.name)}</b><div class="muted" style="margin:0;font-size:14px">Level ${lvlOf(p)} · ${fmt(p.coins)} coins · ${p.review.length} to fix</div></div>
     <select data-stage="${p.id}" aria-label="Stage for ${esc(p.name)}" style="width:auto">${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${n===p.stage?'selected':''}>Stage ${n}</option>`).join('')}</select>
     <button class="btn sm ghost" data-bonus="${p.id}">+50 coins</button><button class="btn sm red" data-del="${p.id}">Remove</button></div>`).join('')}</div>
    <div class="row" style="margin-top:12px"><button class="btn sm" data-new="1">Add player</button></div><div id="delBox"></div></section>
 
-  <section class="card gsec"><h2>Progress for ${esc(P().name)}</h2>
-   ${Object.entries(SUBJ).map(([k,s])=>`<div class="acc-row"><b style="text-align:left">${s.subject}</b><div class="t"><i style="width:${pct(P().stats[k])}%;background:${s.col}"></i></div><b>${P().stats[k].t?pct(P().stats[k])+'%':'—'}</b></div>`).join('')}
-   ${(()=>{const rows=Object.entries(P().strands).map(([k,v])=>{const [sub,str]=k.split(':');return {sub,str,...v,p:pct(v)}}).sort((a,b)=>a.p-b.p);
-    return rows.length?`<div class="tbl-wrap"><table><thead><tr><th>Subject</th><th>Topic</th><th>Right</th><th>Status</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${SUBJ[r.sub].subject}</td><td>${r.str}</td><td>${r.c}/${r.t} (${r.p}%)</td><td><span class="chip ${r.p>=80?'ok':r.p>=55?'wait':'no'}">${r.p>=80?'Strong':r.p>=55?'Getting there':'Needs practice'}</span></td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Topics appear after the first quest, weakest first.</p>'})()}</section>
+  <section class="card gsec"><h2>Fair coins</h2><p class="muted">Coins are only given when a child takes time to read the question, so fast guessing earns nothing. Quests with 80% or more right earn a bonus.</p>
+   <label class="f" for="capSel" style="max-width:280px;margin-top:10px">Daily coin limit<select id="capSel">${[[0,'No limit'],[100,'100 a day'],[150,'150 a day'],[200,'200 a day'],[300,'300 a day']].map(([v,l])=>`<option value="${v}" ${F.coinCap===v?'selected':''}>${l}</option>`).join('')}</select></label>
+   <p class="muted" style="font-size:14px">Level-up and boss rewards don't count toward the limit.</p></section>
 
-  <section class="card gsec"><h2>Reward shop</h2><p class="muted">Set your own rewards and prices. A child earns about 60–90 coins a day doing the 15-question mission.</p>
+  <section class="card gsec"><h2>Reward shop</h2><p class="muted">Set your own rewards and prices. A child doing the daily mission well earns about 80–120 coins a day.</p>
    <div class="list">${F.rewards.map(r=>`<div class="li">${icoSVG(r.icon)}<div class="grow"><b>${esc(r.name)}</b></div><label style="display:flex;gap:6px;align-items:center;font-weight:700">Coins<input type="number" min="10" step="10" value="${r.cost}" data-cost="${r.id}" id="cost-${r.id}"></label><button class="btn sm red" data-rdel="${r.id}">Remove</button></div>`).join('')}</div>
    <div class="form"><label class="f" for="nr-name">New reward<input id="nr-name" placeholder="e.g. Trip to the zoo" maxlength="40"></label>
     <label class="f" for="nr-cost">Coins<input id="nr-cost" type="number" min="10" step="10" value="300"></label>
     <label class="f" for="nr-icon">Picture<select id="nr-icon">${Object.keys(ICONS).map(k=>`<option value="${k}">${k}</option>`).join('')}</select></label></div>
    <div class="row" style="margin-top:12px"><button class="btn sm" id="nr-add">Add reward</button></div></section>
 
-  <section class="card gsec"><h2>Parent PIN</h2><p class="muted">${F.pin?'This tab is locked with a PIN.':'Set a PIN so kids can’t approve their own rewards.'}</p>
-   <div class="row" style="margin-top:10px"><input id="pinSet" type="password" inputmode="numeric" maxlength="4" placeholder="4 digits" style="max-width:160px" aria-label="New PIN"><button class="btn sm" id="pinSave">${F.pin?'Change PIN':'Set PIN'}</button>${F.pin?'<button class="btn sm ghost" id="pinLock">Lock now</button>':''}</div></section>
+  ${F.pin?pinCard:''}
 
   <section class="card gsec"><h2>Move to another device</h2><p class="muted">Progress is saved on this device. To move it to an iPad or phone, copy the save code here and paste it on the other device.</p>
    <textarea id="saveCode" readonly aria-label="Save code"></textarea>
@@ -700,12 +1042,13 @@ function renderGrown(){
   const reG=()=>{save();renderChrome();renderGrown()};
   app.querySelectorAll('[data-ok]').forEach(b=>b.onclick=()=>{F.claims.find(c=>c.id===b.dataset.ok).status='approved';reG();toast('Approved')});
   app.querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>{const c=F.claims.find(x=>x.id===b.dataset.no);c.status='declined';const p=F.profiles.find(x=>x.id===c.pid);if(p)p.coins+=c.cost;reG();toast('Declined. Coins refunded')});
-  app.querySelectorAll('[data-stage]').forEach(s=>s.onchange=()=>{F.profiles.find(p=>p.id===s.dataset.stage).stage=+s.value;reG()});
+  app.querySelectorAll('[data-stage]').forEach(s=>s.onchange=()=>{const p=F.profiles.find(p=>p.id===s.dataset.stage);p.stage=+s.value;p.adj=tri(0);p.recent={math:[],sci:[],eng:[]};reG()});
   app.querySelectorAll('[data-bonus]').forEach(b=>b.onclick=()=>{F.profiles.find(p=>p.id===b.dataset.bonus).coins+=50;reG();toast('Added 50 bonus coins')});
   app.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const p=F.profiles.find(x=>x.id===b.dataset.del);
    document.getElementById('delBox').innerHTML=`<div class="row" style="margin-top:12px"><b>Remove ${esc(p.name)} and all their progress?</b><button class="btn sm red" id="delYes">Yes, remove</button><button class="btn sm ghost" id="delNo">Keep</button></div>`;
    document.getElementById('delNo').onclick=renderGrown;document.getElementById('delYes').onclick=()=>{F.profiles=F.profiles.filter(x=>x.id!==p.id);
-    if(F.active===p.id){F.active=F.profiles[0]?F.profiles[0].id:null}save();if(!F.active){view='who'}render()}});
+    if(F.active===p.id)F.active=F.profiles[0]?F.profiles[0].id:null;save();if(!F.active)view='who';render()}});
+  document.getElementById('capSel').onchange=e=>{F.coinCap=+e.target.value;save();toast('Daily coin limit saved')};
   app.querySelectorAll('[data-cost]').forEach(inp=>inp.onchange=()=>{const v=Math.max(10,parseInt(inp.value)||10);F.rewards.find(r=>r.id===inp.dataset.cost).cost=v;save();toast('Price saved')});
   app.querySelectorAll('[data-rdel]').forEach(b=>b.onclick=()=>{F.rewards=F.rewards.filter(r=>r.id!==b.dataset.rdel);reG()});
   document.getElementById('nr-add').onclick=()=>{const n=document.getElementById('nr-name').value.trim();if(!n){toast('Type a reward name');return}
@@ -717,21 +1060,25 @@ function renderGrown(){
    (navigator.clipboard?navigator.clipboard.writeText(code):Promise.reject()).then(()=>toast('Save code copied')).catch(()=>{ta.focus();ta.select();toast('Selected. Copy it with your device')})};
   document.getElementById('loadBtn').onclick=()=>{const v=document.getElementById('loadCode').value.trim();let d;try{d=JSON.parse(decodeURIComponent(escape(atob(v))));if(!d.profiles)throw 0}catch(e){toast('That save code did not work. Copy the whole code and try again.');return}
    document.getElementById('loadBox').innerHTML=`<div class="row" style="margin-top:10px"><b>Replace everything on this device with ${d.profiles.length} player(s) from the code?</b><button class="btn sm red" id="ldYes">Yes, load</button><button class="btn sm ghost" id="ldNo">Cancel</button></div>`;
-   document.getElementById('ldNo').onclick=renderGrown;document.getElementById('ldYes').onclick=()=>{F=Object.assign(freshFamily(),d);save();grownOpen=false;view='who';render();toast('Save loaded')}};
+   document.getElementById('ldNo').onclick=renderGrown;document.getElementById('ldYes').onclick=()=>{F=Object.assign(freshFamily(),d);F.profiles.forEach(upgrade);save();grownOpen=false;view='who';render();toast('Save loaded')}};
   document.getElementById('snd').onclick=()=>{F.muted=!F.muted;reG()};
 }
 
-/* ============ router ============ */
+/* ===================== ROUTER ===================== */
 function render(){const p=P();if(!p&&view!=='who')view='who';if(p)rollDay(p);if(view!=='grown')grownOpen=false;renderChrome();
   ({who:renderWho,map:renderMap,quest:renderQuest,crew:renderCrew,shop:renderShop,leaders:renderLeaders,grown:renderGrown}[view]||renderMap)();window.scrollTo({top:0})}
-document.addEventListener('click',e=>{
-  const pl=e.target.closest('[data-play]');if(pl){F.active=pl.dataset.play;save();view='map';render();return}
-  const nw=e.target.closest('[data-new]');if(nw){editing={};view='who';render();return}
-  const g=e.target.closest('[data-go]');if(g){startQuest(g.dataset.go);return}
-  const v=e.target.closest('[data-view]');if(v){view=v.dataset.view;render()}});
+document.addEventListener('click',e=>{const t=e.target.closest('[data-play],[data-new],[data-go],[data-boss],[data-review],[data-mystery],[data-view]');if(!t||t.disabled)return;
+  if(t.dataset.play){F.active=t.dataset.play;save();view='map';render()}
+  else if(t.dataset.new){editing={};view='who';render()}
+  else if(t.dataset.go)startQuest('normal',t.dataset.go);
+  else if(t.dataset.boss)startQuest('boss',t.dataset.boss);
+  else if(t.dataset.review)startQuest('review');
+  else if(t.dataset.mystery)startQuest('mystery');
+  else if(t.dataset.view){view=t.dataset.view;render()}});
 document.getElementById('whoBtn').onclick=()=>{view='who';editing=null;render()};
 document.getElementById('muteBtn').onclick=()=>{F.muted=!F.muted;save();renderChrome();if(!F.muted)sfx.coin()};
-document.addEventListener('keydown',e=>{if(view!=='quest'||!Q||Q.answered)return;if(e.target.tagName==='INPUT')return;const i='ABCD'.indexOf(e.key.toUpperCase());const j='1234'.indexOf(e.key);if(i>=0)answer(i);else if(j>=0)answer(j)});
+document.addEventListener('keydown',e=>{if(view!=='quest'||!Q||Q.answered)return;if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;const q=Q.list[Q.i];if(q.kind!=='mc')return;
+  let i='ABCD'.indexOf(e.key.toUpperCase());if(i<0)i='1234'.indexOf(e.key);const b=app.querySelector(`[data-opt="${i}"]`);if(b)b.click()});
 let tt;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2800)}
 function confetti(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;const cv=document.getElementById('confetti'),cx=cv.getContext('2d');cv.width=innerWidth;cv.height=innerHeight;
   const cols=['#e8442e','#ffc531','#3fbf5a','#4b7bf5','#ff5fd1'];const ps=Array.from({length:80},()=>({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.4,s:R(6,10),vy:R(3,7),vx:R(-2,2),c:pick(cols)}));
@@ -739,8 +1086,8 @@ function confetti(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)re
 
 if(F.active&&P())view='map';
 render();
-// Offline + install support when hosted (e.g. GitHub Pages). Ignored where service workers are unavailable.
 try{if('serviceWorker' in navigator&&location.protocol==='https:'&&!/claude/.test(location.hostname))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
+
 </script>
 
 </body>
