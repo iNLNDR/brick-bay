@@ -370,6 +370,28 @@ input.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,
 .opts.bars .opt.pic{min-height:64px;align-items:flex-start}
 .opts.bars .opt.pic .pic{display:block;width:100%;text-align:left}
 .opts.bars .opt.pic .pic svg{height:auto;display:block}
+
+.crew-top{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.dressed{width:150px;height:150px;flex:none;background:var(--card-2);border-radius:20px;padding:10px}
+.buddy-chip{display:flex;gap:10px;align-items:center;background:var(--card-2);border-radius:14px;padding:8px 12px}
+.buddy-chip .bf{width:46px;height:46px;flex:none}.buddy-chip .bf svg{width:100%;height:100%}
+.buddy-chip small{display:block;color:var(--ink-soft);font-weight:600}
+.seg.slots,.seg.crewtabs{display:flex;flex-wrap:wrap}
+.wardrobe{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:12px}
+.acc{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:14px}
+.acc-pic{width:96px;height:96px;background:var(--card-2);border-radius:14px;padding:6px}
+.acc.locked .acc-pic{filter:grayscale(1);opacity:.55}
+.acc.on{outline:4px solid var(--sun)}
+.acc b{font-size:16px}
+.lock{font-weight:700;color:var(--ink-soft);font-size:13px}
+.wearing{font-weight:800;color:var(--good);font-size:13px}
+.pet .pw{font-size:13px}
+.pet.buddy{outline:4px solid var(--sun)}
+.pet .btn{margin-top:6px}
+.hero-buddy{display:inline-flex;gap:8px;align-items:center;background:var(--plum-2);border-radius:99px;padding:4px 14px 4px 4px;margin-top:8px;font-weight:600;color:var(--plum-txt)}
+.hero-buddy svg{width:34px;height:34px}
+.speak.hint{background:var(--grape);color:#fff}
+.opt.gone{opacity:.25}
 </style>
 
 <header class="bar" id="bar" hidden>
@@ -874,19 +896,19 @@ const AVATARS=[
   '.....rr.....','.....ss.....','.ssssssssss.','.sbbbbbbbbs.','.sbWWbbWWbs.','.sbbbbbbbbs.','.sbbyyyybbs.','.ssssssssss.','..ssrrrrss..','..ssssssss..','..ss....ss..','.sss....sss.']},
  {id:'slime',name:'Gloop the Slime',lvl:1,pal:{s:'#4fb6ff',l:'#bde6ff',d:'#1f5f9e',W:'#fff',K:'#1a1333'},map:[
   '............','.....ss.....','....ssss....','...sslsss...','..sslssssss.','..sWKssWKss.','.ssssssssss.','.sssdddssss.','ssssssssssss','ssssssssssss','.ssssssssss.','............']},
- {id:'ghost',name:'Boo the Ghost',lvl:2,pal:{w:'#f4f2ff',p:'#ff9ec7',K:'#1a1333',b:'#c9c2f0'},map:[
+ {id:'ghost',name:'Boo the Ghost',lvl:3,pal:{w:'#f4f2ff',p:'#ff9ec7',K:'#1a1333',b:'#c9c2f0'},map:[
   '....wwww....','..wwwwwwww..','.wwwwwwwwww.','.wwKKwwKKww.','.wwKKwwKKww.','.wwwwwwwwww.','.wpwwKKwwpw.','.wwwwwwwwww.','.wwwwwwwwwb.','.wwwwwwwwwb.','.ww.ww.ww.b.','.w...w..w...']},
- {id:'catwiz',name:'Mittens the Wizard',lvl:3,pal:{p:'#7346d6',y:'#ffc531',c:'#ff9a3d',G:'#3fbf5a',n:'#ff7aa8',r:'#9b6bff',K:'#1a1333'},map:[
+ {id:'catwiz',name:'Mittens the Wizard',lvl:5,pal:{p:'#7346d6',y:'#ffc531',c:'#ff9a3d',G:'#3fbf5a',n:'#ff7aa8',r:'#9b6bff',K:'#1a1333'},map:[
   '.....pp.....','....ppyp....','...pppppp...','.pppppppppp.','..cc....cc..','..cccccccc..','..cGccccGc..','..cccnnccc..','...cccccc...','..rrrrrrrr..','..rryrrrrr..','..cc....cc..']},
- {id:'dragon',name:'Ember the Dragon',lvl:4,pal:{p:'#e8442e',h:'#ffe27a',w:'#9b2a1c',y:'#ffd36b',W:'#fff',K:'#1a1333'},map:[
+ {id:'dragon',name:'Ember the Dragon',lvl:8,pal:{p:'#e8442e',h:'#ffe27a',w:'#9b2a1c',y:'#ffd36b',W:'#fff',K:'#1a1333'},map:[
   '.h........h.','.hh......hh.','..pppppppp..','.pppppppppp.','wpWKppppWKpw','wwppppppppww','wwppyyyyppww','.wppppppppw.','..pyyyyyyp..','..pp.pp.pp..','.ppp....ppp.','............']},
- {id:'unicorn',name:'Nova the Unicorn',lvl:5,pal:{y:'#ffc531',m:'#ff5fd1',b:'#4b9bff',u:'#fdfbff',p:'#ffb3d1',g:'#9b6bff',K:'#1a1333'},map:[
+ {id:'unicorn',name:'Nova the Unicorn',lvl:10,pal:{y:'#ffc531',m:'#ff5fd1',b:'#4b9bff',u:'#fdfbff',p:'#ffb3d1',g:'#9b6bff',K:'#1a1333'},map:[
   '......y.....','.....yy.....','....yy......','..mmuuuuu...','.mmuuuuuuu..','mmuuKuuuuu..','mbuuuuuuuuu.','mbuuuuuuppu.','.buuuuuuuu..','..uuuuuu....','..uu..uu....','..gg..gg....']},
- {id:'yeti',name:'Frost the Yeti',lvl:6,pal:{w:'#e9f6ff',b:'#7fc8ff',f:'#3b6fa8',K:'#1a1333',W:'#fff'},map:[
+ {id:'yeti',name:'Frost the Yeti',lvl:13,pal:{w:'#e9f6ff',b:'#7fc8ff',f:'#3b6fa8',K:'#1a1333',W:'#fff'},map:[
   '..ww....ww..','.wwwwwwwwww.','.wwbbbbbbww.','wwbKbbbbKbww','wwbbbbbbbbww','wwbbWWWWbbww','.wwbbbbbbww.','wwwwwwwwwwww','w.wwwwwwww.w','..wwwwwwww..','..ww....ww..','.fff....fff.']},
- {id:'phoenix',name:'Blaze the Phoenix',lvl:8,pal:{r:'#e8442e',o:'#ff8a2b',y:'#ffc531',K:'#1a1333'},map:[
+ {id:'phoenix',name:'Blaze the Phoenix',lvl:16,pal:{r:'#e8442e',o:'#ff8a2b',y:'#ffc531',K:'#1a1333'},map:[
   '.....r..r...','......rr....','....oooo....','...oooooo...','...oKoooyy..','...ooooooy..','.r.oooooo.r.','rr.oyyyyo.rr','.rroyyyyorr.','...oooooo...','....o..o....','...yy..yy...']},
- {id:'kraken',name:'Inky the Kraken',lvl:10,pal:{p:'#c04de0',l:'#e9a6ff',W:'#fff',K:'#1a1333'},map:[
+ {id:'kraken',name:'Inky the Kraken',lvl:20,pal:{p:'#c04de0',l:'#e9a6ff',W:'#fff',K:'#1a1333'},map:[
   '....pppp....','..pppppppp..','.pppllpppp..','.pppppppppp.','.pWKppppWKp.','.pppppppppp.','.pppppppppp.','..pppppppp..','.p.p.pp.p.p.','p..p.pp.p..p','.p.p..p.p.p.','..p...p..p..']}
 ];
 const ICONS={
@@ -945,6 +967,122 @@ function petSVG(m){const c=m.c,a=m.a,ink='#2a1f4a';let f='';
 
 
 
+
+/* ===================== LEVELS: each level needs more XP ===================== */
+// Level 1→2 needs 150 XP, then +100 more for every level (2→3: 250, 3→4: 350 …). A right answer is 10 XP.
+const xpNeed=L=>150+(L-1)*100;
+function levelInfo(xp){let L=1,rest=xp||0;while(rest>=xpNeed(L)){rest-=xpNeed(L);L++}return {lvl:L,into:rest,need:xpNeed(L)}}
+
+/* ===================== ACCESSORIES ===================== */
+const ACC_PAL={K:'#1a1333',W:'#ffffff',y:'#ffc531',Y:'#d99a00',r:'#e8442e',R:'#9e2416',b:'#4b7bf5',B:'#2f56c4',p:'#ff9ec7',m:'#ff5fd1',g:'#3fbf5a',s:'#c9d3e6',S:'#8a95ad',o:'#ff8a2b',n:'#8b5a2b',l:'#8fe3ff',P:'#9b6bff',w:'#fff4d6'};
+// Where hats, glasses and neckwear sit on each character (row numbers on the 12×12 grid).
+const ANCH={alien:{top:2,eye:6,neck:9},robot:{top:2,eye:4,neck:8},slime:{top:1,eye:5,neck:8},ghost:{top:0,eye:4,neck:7},catwiz:{top:3,eye:6,neck:9},
+  dragon:{top:2,eye:4,neck:8},unicorn:{top:3,eye:5,neck:9},yeti:{top:1,eye:3,neck:7},phoenix:{top:2,eye:4,neck:7},kraken:{top:0,eye:4,neck:7}};
+const SLOTS=[['head','Hats'],['face','Face'],['neck','Neck'],['hand','Hands'],['back','Glow']];
+const ACCS=[
+ {id:'party',slot:'head',name:'Party hat',how:{lvl:2},map:['...y...','..mmm..','.mymym.','mmmmmmm']},
+ {id:'flower',slot:'head',name:'Flower',how:{coins:150},map:['.m.m.','mmymm','.m.m.']},
+ {id:'cap',slot:'head',name:'Blue cap',how:{lvl:4},map:['.bbbb...','bbWbbb..','bbbbbbbb']},
+ {id:'chef',slot:'head',name:'Chef hat',how:{coins:250},map:['.WWWW.','WWWWWW','WWWWWW','.ssss.']},
+ {id:'pirate',slot:'head',name:'Pirate hat',how:{boss:1},map:['...KK...','.KKWWKK.','KKKKKKKK','.yyyyyy.']},
+ {id:'crown',slot:'head',name:'Gold crown',how:{boss:3},map:['y.y.y.y','yyyyyyy','yrYyYby']},
+ {id:'viking',slot:'head',name:'Viking helmet',how:{lvl:15},map:['w......w','ww....ww','.ssssss.','sSssssSs']},
+ {id:'halo',slot:'head',name:'Halo',how:{lvl:18},map:['.yyyy.','y....y','.yyyy.'],dy:-2},
+ {id:'shades',slot:'face',name:'Cool shades',how:{lvl:6},map:['KKKKKKKK','KKK..KKK','.K....K.'],lens:1},
+ {id:'nerd',slot:'face',name:'Smart glasses',how:{coins:200},map:['BBB..BBB','BlBBBBlB','BBB..BBB'],lens:1},
+ {id:'mask',slot:'face',name:'Hero mask',how:{coins:300},map:['rrrrrrrr','rWrrrrWr'],lens:1},
+ {id:'goggles',slot:'face',name:'Ski goggles',how:{quests:30},map:['oooooooo','olloollo'],lens:1},
+ {id:'patch',slot:'face',name:'Eye patch',how:{mastered:10},map:['KKKKKKKK','.KK.....','.KK.....'],lens:1},
+ {id:'bowtie',slot:'neck',name:'Bow tie',how:{lvl:8},map:['rr..rr','rrRRrr','rr..rr']},
+ {id:'pearls',slot:'neck',name:'Pearl necklace',how:{coins:200},map:['W......W','.W....W.','..WWWW..']},
+ {id:'scarf',slot:'neck',name:'Cosy scarf',how:{lvl:10},map:['bbbbbbbb','bWbWbWbb','.....bb.','.....bb.']},
+ {id:'medal',slot:'neck',name:'Streak medal',how:{streak:7},map:['.r..r.','..rr..','.yyyy.','.yYYy.','..yy..']},
+ {id:'icecream',slot:'hand',name:'Ice cream',how:{coins:150},map:['.pp.','pppp','yYyY','.yy.','..y.'],dy:-3},
+ {id:'balloon',slot:'hand',name:'Balloon',how:{coins:250},map:['.mm.','mmmm','mmmm','.mm.','..K.','..K.','..K.'],dy:-6},
+ {id:'wand',slot:'hand',name:'Magic wand',how:{lvl:12},map:['..y.','.yyy','..y.','.n..','n...'],dy:-3},
+ {id:'flag',slot:'hand',name:'Brick Bay flag',how:{quests:50},map:['nrrr','nryr','nrrr','n...','n...','n...'],dy:-5},
+ {id:'trophy',slot:'hand',name:'Trophy',how:{boss:6},map:['yyyyy','.yyy.','..y..','.YYY.'],dy:-2},
+ {id:'sparkle',slot:'back',name:'Sparkles',how:{coins:400}},
+ {id:'rainbow',slot:'back',name:'Rainbow',how:{lvl:20}}
+];
+const accById=id=>ACCS.find(a=>a.id===id);
+const totalQuests=p=>(p.quests.math||0)+(p.quests.sci||0)+(p.quests.eng||0);
+function accReq(p,a){const h=a.how;
+  if(h.lvl)return {ok:lvlOf(p)>=h.lvl,txt:`Reach level ${h.lvl}`};
+  if(h.boss)return {ok:p.bosses>=h.boss,txt:`Beat ${h.boss} boss${h.boss>1?'es':''} (${Math.min(p.bosses,h.boss)}/${h.boss})`};
+  if(h.streak)return {ok:(p.bestStreak||0)>=h.streak,txt:`Play ${h.streak} days in a row (best ${p.bestStreak||0})`};
+  if(h.mastered)return {ok:(p.mastered||0)>=h.mastered,txt:`Master ${h.mastered} mistakes (${Math.min(p.mastered||0,h.mastered)}/${h.mastered})`};
+  if(h.quests)return {ok:totalQuests(p)>=h.quests,txt:`Finish ${h.quests} quests (${Math.min(totalQuests(p),h.quests)}/${h.quests})`};
+  return {ok:false,txt:`${h.coins} coins`}}
+const ownsAcc=(p,a)=>p.acc.includes(a.id)||(!a.how.coins&&accReq(p,a).ok);
+function backPixels(it){const out=[];
+  if(it.id==='sparkle')[[-2,1,'y'],[13,0,'y'],[-1,9,'m'],[13,8,'b'],[-3,5,'b'],[14,4,'m'],[6,-3,'y'],[0,-2,'m'],[12,-2,'b']].forEach(([x,y,c])=>out.push([x,y,ACC_PAL[c]]));
+  if(it.id==='rainbow')[['r',8.5],['o',7.5],['y',6.5],['g',5.5]].forEach(([c,r])=>{const seen=new Set();for(let a=180;a<=360;a+=3){const x=Math.round(5.5+r*Math.cos(a*Math.PI/180)),y=Math.round(6+r*Math.sin(a*Math.PI/180)),k=x+','+y;if(!seen.has(k)){seen.add(k);out.push([x,y,ACC_PAL[c]])}}});
+  return out}
+function dressSVG(p,over,label){const av=avById(p.avatar),an=ANCH[av.id]||{top:1,eye:4,neck:8},wear={...(p.wear||{}),...(over||{})},px=[];
+  const back=accById(wear.back);if(back)backPixels(back).forEach(q=>px.push(q));
+  av.map.forEach((row,y)=>[...row].forEach((ch,x)=>{const c=av.pal[ch];if(c)px.push([x,y,c])}));
+  for(const slot of ['neck','face','head','hand']){const it=accById(wear[slot]);if(!it||!it.map)continue;const w=Math.max(...it.map.map(r=>r.length)),h=it.map.length;let x0,y0;
+    if(slot==='head'){x0=6-Math.floor(w/2);y0=an.top-(h-1)+(it.dy||0)}else if(slot==='face'){x0=6-Math.floor(w/2);y0=an.eye-(it.lens||0)}
+    else if(slot==='neck'){x0=6-Math.floor(w/2);y0=an.neck}else{x0=11;y0=an.neck+(it.dy||0)}
+    it.map.forEach((row,yy)=>[...row].forEach((ch,xx)=>{const c=ACC_PAL[ch];if(c)px.push([x0+xx,y0+yy,c])}))}
+  const xs=px.map(q=>q[0]),ys=px.map(q=>q[1]),minX=Math.min(0,...xs),maxX=Math.max(12,...xs.map(x=>x+1)),minY=Math.min(0,...ys),maxY=Math.max(12,...ys.map(y=>y+1));
+  const side=Math.max(maxX-minX,maxY-minY),cx=(minX+maxX)/2,cy=(minY+maxY)/2;
+  return `<svg class="px" viewBox="${cx-side/2} ${cy-side/2} ${side} ${side}" role="img" aria-label="${esc(label||p.name)}">${px.map(([x,y,c])=>`<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${c}"/>`).join('')}</svg>`}
+
+/* ===================== PET BUDDIES ===================== */
+const POWERS={
+ coins:{name:'Coin finder',desc:'+2 coins for every right answer.'},
+ xp:{name:'Brain boost',desc:'+3 XP for every right answer.'},
+ hint:{name:'Helper',desc:'One hint per quest: takes away a wrong answer.'},
+ chance:{name:'Second chance',desc:'One free "try again" per quest.'},
+ heart:{name:'Shield',desc:'+1 heart in boss battles.'},
+ shield:{name:'Streak saver',desc:'Keeps your streak if you miss one day (once a week).'}
+};
+const PET_POWER={pip:'coins',coralot:'hint',mossbit:'shield',fizzwick:'hint',pebblin:'heart',gusto:'xp',embertoe:'xp',shellby:'heart',whiskit:'chance',glimmer:'coins',brambo:'heart',starla:'chance'};
+const EGG_COST=80;
+const buddyOf=p=>p.buddy&&p.pets.includes(p.buddy)?PETS.find(m=>m.id===p.buddy):null;
+const hasPower=(p,k)=>{const b=buddyOf(p);return !!b&&PET_POWER[b.id]===k};
+function buddyChip(p){const b=buddyOf(p);if(!b)return '';const pw=POWERS[PET_POWER[b.id]];
+  return `<div class="buddy-chip"><span class="bf">${petSVG(b)}</span><span><b>${b.name}</b> · ${pw.name}<small>${pw.desc}</small></span></div>`}
+
+/* ===================== CREW SCREEN ===================== */
+let crewTab='wardrobe',wardSlot='head';
+function renderCrew(newPet){const p=P(),lvl=lvlOf(p),left=PETS.filter(m=>!p.pets.includes(m.id)),b=buddyOf(p);
+  const tabs=[['wardrobe','Wardrobe'],['chars','Characters'],['pets','Pets']];
+  let body='';
+  if(crewTab==='wardrobe'){
+    const items=ACCS.filter(a=>a.slot===wardSlot);
+    body=`<div class="seg slots" role="group">${SLOTS.map(([k,l])=>`<button data-slot="${k}" aria-pressed="${k===wardSlot}">${l}</button>`).join('')}</div>
+     <div class="wardrobe">${items.map(a=>{const own=ownsAcc(p,a),on=p.wear[a.slot]===a.id,req=accReq(p,a);
+       const btn=on?`<button class="btn sm ghost" data-off="${a.slot}">Take off</button>`:own?`<button class="btn sm green" data-wear="${a.id}">Wear</button>`:a.how.coins?`<button class="btn sm" data-buy="${a.id}" ${p.coins<a.how.coins?'disabled':''}>Buy · ${a.how.coins}</button>`:`<small class="lock">${esc(req.txt)}</small>`;
+       return `<div class="card acc ${own?'':'locked'} ${on?'on':''}"><div class="acc-pic">${dressSVG(p,{[a.slot]:a.id},a.name)}</div><b>${a.name}</b>${on?'<small class="wearing">Wearing</small>':''}${btn}</div>`}).join('')}</div>
+     <p style="color:#fff;font-weight:700">Some things are bought with coins. Others are earned: level up, beat bosses, keep a streak or fix your mistakes.</p>`}
+  if(crewTab==='chars'){
+    body=`<div class="card"><p class="muted" style="margin-top:0">New characters unlock as you level up. You're level ${lvl}.</p>
+     <div class="avatars">${AVATARS.map(a=>{const lock=a.lvl>lvl&&a.id!==p.avatar;return `<button class="av ${lock?'locked':''}" ${lock?'disabled':''} data-av="${a.id}" aria-pressed="${a.id===p.avatar}">${avSVG(a.id)}<span>${a.name.split(' ')[0]}</span><small>${lock?`Level ${a.lvl}`:a.name.split(' the ')[1]||''}</small></button>`}).join('')}</div></div>`}
+  if(crewTab==='pets'){
+    body=`<div class="hatch"><div class="egg" id="egg" aria-hidden="true"></div><div style="flex:1 1 200px;min-width:0"><h2>Mystery egg</h2>
+     <p>${left.length?`Every pet has a power. Pick one as your quest buddy and it helps you in every quest. Eggs cost ${EGG_COST} coins. You have ${fmt(p.coins)}.`:'You found every pet. Legendary crew!'}</p>
+     <button class="btn" id="hatchBtn" ${p.coins<EGG_COST||!left.length?'disabled':''}>Hatch for ${EGG_COST} coins</button></div></div>
+     <div class="pets" style="margin-top:14px">${PETS.map(m=>{const has=p.pets.includes(m.id),pw=POWERS[PET_POWER[m.id]],isB=p.buddy===m.id;
+       return `<div class="pet ${has?'':'locked'} ${m.id===newPet?'new':''} ${isB?'buddy':''}">${petSVG(m)}<h3>${has?m.name:'???'}</h3><p class="pw"><b>${pw.name}</b><br>${pw.desc}</p>
+        ${has?(isB?'<small class="wearing">Your buddy</small>':`<button class="btn sm green" data-buddy="${m.id}">Make buddy</button>`):'<small class="lock">Hatch an egg</small>'}</div>`}).join('')}</div>`}
+  app.innerHTML=`<section class="card crew-top">
+    <div class="dressed">${dressSVG(p)}</div>
+    <div style="flex:1 1 220px;min-width:0"><h2 style="font-size:28px">${esc(p.name)}</h2><p class="muted" style="margin:2px 0 10px">Level ${lvl} · ${avById(p.avatar).name}</p>
+     ${b?buddyChip(p):'<p class="note" style="margin:0">No buddy yet. Hatch a pet in the Pets tab and make it your buddy.</p>'}</div></section>
+   <div class="seg crewtabs" role="group" style="margin-top:16px">${tabs.map(([k,l])=>`<button data-ctab="${k}" aria-pressed="${k===crewTab}">${l}</button>`).join('')}</div>${body}`;
+  app.querySelectorAll('[data-ctab]').forEach(x=>x.onclick=()=>{crewTab=x.dataset.ctab;renderCrew()});
+  app.querySelectorAll('[data-slot]').forEach(x=>x.onclick=()=>{wardSlot=x.dataset.slot;renderCrew()});
+  app.querySelectorAll('[data-wear]').forEach(x=>x.onclick=()=>{const a=accById(x.dataset.wear);p.wear[a.slot]=a.id;save();renderChrome();renderCrew();sfx.coin()});
+  app.querySelectorAll('[data-off]').forEach(x=>x.onclick=()=>{delete p.wear[x.dataset.off];save();renderChrome();renderCrew()});
+  app.querySelectorAll('[data-buy]').forEach(x=>x.onclick=()=>{const a=accById(x.dataset.buy);if(p.coins<a.how.coins)return;p.coins-=a.how.coins;p.acc.push(a.id);p.wear[a.slot]=a.id;save();renderChrome();renderCrew();sfx.win();toast(`You got the ${a.name}!`)});
+  app.querySelectorAll('[data-av]').forEach(x=>x.onclick=()=>{p.avatar=x.dataset.av;save();renderChrome();renderCrew();sfx.coin()});
+  app.querySelectorAll('[data-buddy]').forEach(x=>x.onclick=()=>{p.buddy=x.dataset.buddy;save();renderCrew();sfx.coin();const m=PETS.find(q=>q.id===p.buddy);toast(`${m.name} is your buddy: ${POWERS[PET_POWER[m.id]].name}!`)});
+  const hb=document.getElementById('hatchBtn');if(hb)hb.onclick=()=>{if(p.coins<EGG_COST||!left.length)return;p.coins-=EGG_COST;const m=pick(left);p.pets.push(m.id);if(!p.buddy)p.buddy=m.id;save();
+    document.getElementById('egg').classList.add('shake');sfx.coin();setTimeout(()=>{renderChrome();renderCrew(m.id);toast(`${m.name} joined your crew! Power: ${POWERS[PET_POWER[m.id]].name}`);sfx.win();confetti()},900)}}
+
 /* ===================== BOSSES ===================== */
 const BOSSES={
  math:{name:'Calculator Crab',pal:{r:'#e8442e',y:'#ffc531',W:'#fff',K:'#1a1333'},map:['.r........r.','rr........rr','r.r......r.r','...rrrrrr...','..rWKrrWKr..','.rrrrrrrrrr.','rrrrryyrrrrr','.rrrrrrrrrr.','..rrrrrrrr..','.r.r.rr.r.r.','r..r....r..r','............']},
@@ -968,7 +1106,7 @@ function upgrade(p){
   p.adj=p.adj||tri(0);p.recent=p.recent||{math:[],sci:[],eng:[]};p.seen=p.seen||{math:[],sci:[],eng:[]};p.review=p.review||[];
   p.tier=p.tier||tri(1);p.flags=p.flags||{math:Math.min(5,p.quests?.math||0),sci:Math.min(5,p.quests?.sci||0),eng:Math.min(5,p.quests?.eng||0)};
   p.bosses=p.bosses||0;p.today=p.today||{date:todayKey(),n:0};p.today.coins=p.today.coins||0;p.week=p.week||{key:weekKey(),xp:0};
-  p.quests=p.quests||tri(0);p.stats=p.stats||{math:{c:0,t:0},sci:{c:0,t:0},eng:{c:0,t:0}};p.strands=p.strands||{};p.pets=p.pets||['pip'];p.sp=p.sp||tri(0);if(p.indo===undefined)p.indo=p.stage<=1;if(p.autoRead===undefined)p.autoRead=p.stage<=1;return p}
+  p.quests=p.quests||tri(0);p.stats=p.stats||{math:{c:0,t:0},sci:{c:0,t:0},eng:{c:0,t:0}};p.strands=p.strands||{};p.pets=p.pets||['pip'];p.sp=p.sp||tri(0);p.acc=p.acc||[];p.wear=p.wear||{};p.mastered=p.mastered||0;p.bestStreak=Math.max(p.bestStreak||0,p.streak||0);if(p.buddy===undefined)p.buddy=p.pets[0]||null;if(p.indo===undefined)p.indo=p.stage<=1;if(p.autoRead===undefined)p.autoRead=p.stage<=1;return p}
 const newPlayer=(name,stage,avatar)=>upgrade({id:uid(),name,stage,avatar,xp:0,coins:20,streak:0,lastDay:null,created:Date.now()});
 const freshFamily=()=>({v:3,profiles:[],active:null,pin:null,rewards:DEFAULT_REWARDS.map(r=>({...r})),claims:[],muted:false,coinCap:150});
 let F=freshFamily();
@@ -977,7 +1115,7 @@ F.profiles.forEach(upgrade);if(F.coinCap===undefined)F.coinCap=150;
 if((F.v||0)<4){const OLD={r1:150,r2:250,r3:400,r4:600,r5:2000};F.rewards.forEach(r=>{const nd=DEFAULT_REWARDS.find(x=>x.id===r.id);if(nd&&OLD[r.id]===r.cost)r.cost=nd.cost});F.v=4;try{localStorage.setItem(KEY,JSON.stringify(F))}catch(e){}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(F))}catch(e){}}
 const P=()=>F.profiles.find(p=>p.id===F.active);
-const lvlOf=p=>Math.floor(p.xp/100)+1;
+const lvlOf=p=>levelInfo(p.xp).lvl;
 const weekXP=p=>p.week&&p.week.key===weekKey()?p.week.xp:0;
 function rollDay(p){if(p.today.date!==todayKey())p.today={date:todayKey(),n:0,coins:0};if(!p.week||p.week.key!==weekKey())p.week={key:weekKey(),xp:0}}
 const effStage=(p,subj)=>Math.max(0,Math.min(6,p.stage+(p.adj[subj]||0)));
@@ -1070,10 +1208,10 @@ const STAGE_LABEL=['Stage 0 – just starting to read (age 4–6)',...STAGE_AGE.
 
 function renderChrome(){const p=P(),inGame=!!p&&view!=='who';
   document.getElementById('bar').hidden=!inGame;document.getElementById('tabs').hidden=!inGame||view==='quest';
-  if(!inGame)return;const lvl=lvlOf(p),into=p.xp%100;
-  document.getElementById('barFace').innerHTML=avSVG(p.avatar);document.getElementById('barName').textContent=p.name;
-  document.getElementById('barLvl').textContent=`Level ${lvl} · ${stageName(p.stage)}`;document.getElementById('xpFill').style.width=into+'%';
-  document.getElementById('xpText').textContent=`${into}/100 XP to level ${lvl+1}`;document.getElementById('coins').textContent=fmt(p.coins);
+  if(!inGame)return;const LI=levelInfo(p.xp),lvl=LI.lvl,into=LI.into;
+  document.getElementById('barFace').innerHTML=dressSVG(p);document.getElementById('barName').textContent=p.name;
+  document.getElementById('barLvl').textContent=`Level ${lvl} · ${stageName(p.stage)}`;document.getElementById('xpFill').style.width=(into/LI.need*100)+'%';
+  document.getElementById('xpText').textContent=`${into}/${LI.need} XP to level ${lvl+1}`;document.getElementById('coins').textContent=fmt(p.coins);
   document.getElementById('streak').textContent=p.streak;document.getElementById('muteBtn').textContent=F.muted?'Sound off':'Sound on';
   document.querySelectorAll('.tabs [data-view]').forEach(b=>b.setAttribute('aria-current',String(b.dataset.view===view)))}
 
@@ -1081,7 +1219,7 @@ function renderChrome(){const p=P(),inGame=!!p&&view!=='who';
 function renderWho(){if(editing)return renderNewPlayer();
   app.innerHTML=`<div style="text-align:center;margin:10px 0 22px"><h1 style="color:#fff;font-size:clamp(32px,6vw,52px);text-shadow:0 4px 0 rgba(0,0,0,.2)">Brick Bay Academy</h1>
    <p style="color:#fff;font-weight:700;margin:6px 0 0">Who's playing today?</p></div>
-   <div class="players">${F.profiles.map(p=>`<button class="player" data-play="${p.id}"><span class="face">${avSVG(p.avatar)}</span><b>${esc(p.name)}</b><small>Level ${lvlOf(p)} · ${fmt(p.coins)} coins</small></button>`).join('')}
+   <div class="players">${F.profiles.map(p=>`<button class="player" data-play="${p.id}"><span class="face">${dressSVG(p)}</span><b>${esc(p.name)}</b><small>Level ${lvlOf(p)} · ${fmt(p.coins)} coins</small></button>`).join('')}
    <button class="player add" data-new="1"><b>+</b><span style="font-weight:800">Add player</span></button></div>
    ${F.profiles.length?'':'<p style="color:#fff;text-align:center;font-weight:700;margin-top:18px">Make a player for each child. Each one gets their own XP, coins, pets and rewards.</p>'}`}
 function renderNewPlayer(){const sel=editing.avatar||'alien';
@@ -1105,7 +1243,7 @@ function renderMap(){const p=P();rollDay(p);const goal=isStarter(p)?10:15,n=Math
   const next=F.rewards.slice().sort((a,b)=>a.cost-b.cost).find(r=>r.cost>p.coins)||null;
   const due=dueReviews(p).length,total=p.review.length,mystery=p.bosses>0,capHit=F.coinCap&&p.today.coins>=F.coinCap;
   app.innerHTML=`<section class="hero">
-   <div class="hero-main"><div class="big-face">${avSVG(p.avatar)}</div><div><h1>Ahoy, <span>${esc(p.name)}</span>!</h1>
+   <div class="hero-main"><div class="big-face">${dressSVG(p)}</div><div><h1>Ahoy, <span>${esc(p.name)}</span>!</h1>${buddyOf(p)?`<div class="hero-buddy">${petSVG(buddyOf(p))}<span>Buddy: <b>${buddyOf(p).name}</b> · ${POWERS[PET_POWER[buddyOf(p).id]].name}</span></div>`:''}
     <p>Earn XP and coins. Save coins for real rewards, hatch pets, or beat island bosses.</p>
     <button class="btn" data-go="${pick(SUBJS)}">Surprise quest</button></div></div>
    <div class="card goal"><span class="eyebrow">Today's mission</span><h2>${n>=goal?'Mission complete!':`Answer ${goal} questions`}</h2>
@@ -1133,11 +1271,11 @@ function renderMap(){const p=P();rollDay(p);const goal=isStarter(p)?10:15,n=Math
 /* --- quest engine --- */
 function startQuest(mode,key){const p=P();const n=mode==='boss'?8:isStarter(p)?5:6;const subj=mode==='normal'||mode==='boss'?key:mode==='mystery'?'mix':'review';
   const list=buildList(p,mode,key,n);if(!list.length){toast('Nothing to fix right now');return}
-  Q={mode,key:subj,list,i:0,res:[],combo:0,xp:0,c:0,answered:false,boss:mode==='boss'?{hp:6,max:6,hearts:3}:null,quick:0,mastered:0,levelChange:null};view='quest';render()}
+  Q={mode,key:subj,list,i:0,res:[],combo:0,xp:0,c:0,answered:false,boss:mode==='boss'?{hp:6,max:6,hearts:hasPower(p,'heart')?4:3,maxH:hasPower(p,'heart')?4:3}:null,chance:hasPower(p,'chance')?1:0,hint:hasPower(p,'hint')?1:0,quick:0,mastered:0,levelChange:null};view='quest';render()}
 function qColor(){return SUBJ[Q.key]?SUBJ[Q.key]:{name:'Fix my mistakes',col:'var(--brick)',dk:'var(--brick-dk)',btn:'red'}}
 function headHTML(){const s=qColor(),title=Q.mode==='review'?'Fix my mistakes':Q.mode==='boss'?BOSSES[Q.key].name:s.name;
   const prog=Q.boss?'':`<div class="prog">${Q.list.map((_,i)=>`<i class="${i<Q.i?(Q.res[i]?'ok':'no'):i===Q.i?'now':''}"></i>`).join('')}</div>`;
-  const boss=Q.boss?`<div class="bossbar"><div class="boss-face">${pixel(BOSSES[Q.key].map,BOSSES[Q.key].pal,BOSSES[Q.key].name)}</div><div style="flex:1;min-width:0"><div class="hp"><i style="width:${Q.boss.hp/Q.boss.max*100}%"></i></div><small>Boss health ${Q.boss.hp}/${Q.boss.max}</small></div><div class="hearts">${[0,1,2].map(i=>heartSVG(i<Q.boss.hearts)).join('')}</div></div>`:'';
+  const boss=Q.boss?`<div class="bossbar"><div class="boss-face">${pixel(BOSSES[Q.key].map,BOSSES[Q.key].pal,BOSSES[Q.key].name)}</div><div style="flex:1;min-width:0"><div class="hp"><i style="width:${Q.boss.hp/Q.boss.max*100}%"></i></div><small>Boss health ${Q.boss.hp}/${Q.boss.max}</small></div><div class="hearts">${Array.from({length:Q.boss.maxH},(_,i)=>heartSVG(i<Q.boss.hearts)).join('')}</div></div>`:'';
   return `<div class="q-head" style="background:${Q.boss?'var(--grape)':s.col}"><h2>${esc(title)}</h2>${prog}<button class="x" data-view="map">Leave</button>${boss}</div>`}
 function renderQuest(){const q=Q.list[Q.i];const s=SUBJ[q.subj];Q.answered=false;Q.shownAt=Date.now();Q.work=null;
   const L=['A','B','C','D'],lc=['var(--brick)','var(--sun-dk)','var(--plum)','var(--sky-dk)'];let body='';
@@ -1149,7 +1287,7 @@ function renderQuest(){const q=Q.list[Q.i];const s=SUBJ[q.subj];Q.answered=false
   const kindLabel={mc:'',input:'Type it',order:'Put in order',spell:'Spell it',match:'Match pairs'}[q.kind];
   const idn=pl.indo?(q.idn||IDN_KIND[q.kind]):'';
   app.innerHTML=`<section class="quest">${headHTML()}<div class="q-body ${kid?'starter':''}">
-   <div class="q-strand"><span class="eyebrow">${s.subject} · ${q.s}${q.rev?' · <span class="revtag">Mistake to fix</span>':''}${kindLabel&&!kid?` · ${kindLabel}`:''}</span><button class="speak ${kid?'big':''}" id="speakBtn">${kid?'Hear again':'Read aloud'}</button></div>
+   <div class="q-strand"><span class="eyebrow">${s.subject} · ${q.s}${q.rev?' · <span class="revtag">Mistake to fix</span>':''}${kindLabel&&!kid?` · ${kindLabel}`:''}</span><span class="row" style="gap:6px">${Q.hint&&q.kind==='mc'&&q.opts.length>=3?`<button class="speak hint" id="hintBtn">Hint · ${esc(buddyOf(pl).name)}</button>`:''}<button class="speak ${kid?'big':''}" id="speakBtn">${kid?'Hear again':'Read aloud'}</button></span></div>
    ${q.p?`<div class="passage">${esc(q.p)}</div>`:''}<div class="q-text">${esc(q.q)}</div>
    ${idn?`<p class="idn"><span class="tag">ID</span><span class="t">${esc(idn)}</span><button id="idnBtn" type="button">Dengar</button></p>`:''}
    ${q.vis?`<div class="vis">${q.vis}</div>`:''}${body}<div id="fb"></div></div></section>`;
@@ -1158,10 +1296,12 @@ function renderQuest(){const q=Q.list[Q.i];const s=SUBJ[q.subj];Q.answered=false
   document.getElementById('speakBtn').onclick=()=>speak(full);
   const ib=document.getElementById('idnBtn');if(ib)ib.onclick=()=>speak(idn,'id-ID',.9);
   if(pl.autoRead)speak(kid?prompt:(q.say||q.q));
+  const hb=document.getElementById('hintBtn');if(hb)hb.onclick=()=>{const wr=[...app.querySelectorAll('[data-opt]')].filter(x=>!x.disabled&&q.opts[+x.dataset.opt]!==q.a);if(!wr.length)return;const x=pick(wr);x.disabled=true;x.classList.add('gone');Q.hint=0;hb.remove();sfx.tap()};
   if(q.kind==='mc')app.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>{const i=+b.dataset.opt;
+    if(q.opts[i]!==q.a&&useChance()){b.disabled=true;b.classList.add('wrong');return}
     app.querySelectorAll('[data-opt]').forEach((x,j)=>{x.disabled=true;if(q.opts[j]===q.a)x.classList.add('right');else if(j===i)x.classList.add('wrong')});submit(q.opts[i]===q.a,q.opts[i])});
   if(q.kind==='input'){const f=document.getElementById('inForm'),inp=document.getElementById('ans');setTimeout(()=>inp.focus(),50);
-    f.onsubmit=e=>{e.preventDefault();if(Q.answered||!inp.value.trim())return;inp.disabled=true;f.querySelector('button').disabled=true;const ok=checkInput(q,inp.value);inp.classList.add(ok?'right':'wrong');submit(ok,inp.value)}}
+    f.onsubmit=e=>{e.preventDefault();if(Q.answered||!inp.value.trim())return;const ok=checkInput(q,inp.value);if(!ok&&useChance()){inp.value='';inp.focus();return}inp.disabled=true;f.querySelector('button').disabled=true;inp.classList.add(ok?'right':'wrong');submit(ok,inp.value)}}
   if(q.kind==='order'||q.kind==='spell')drawTiles(q);
   if(q.kind==='match')bindMatch(q)}
 function drawTiles(q){const w=Q.work,sep=q.kind==='spell';
@@ -1172,6 +1312,7 @@ function drawTiles(q){const w=Q.work,sep=q.kind==='spell';
   app.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>{if(Q.answered)return;const k=+b.dataset.back;w.pool.push(w.picked[k]);w.picked.splice(k,1);drawTiles(q)});
   document.getElementById('clr').onclick=()=>{if(Q.answered)return;w.pool=w.pool.concat(w.picked);w.picked=[];drawTiles(q)};
   document.getElementById('chk').onclick=()=>{if(Q.answered)return;const given=w.picked.map(i=>q.items[i]);const ok=sep?given.join('')===q.a:given.join('|')===q.a.join('|');
+    if(!ok&&useChance()){w.pool=w.pool.concat(w.picked);w.picked=[];drawTiles(q);return}
     document.getElementById('slot').classList.add(ok?'right':'wrong');app.querySelectorAll('.tile').forEach(t=>t.disabled=true);document.getElementById('chk').disabled=true;submit(ok,sep?given.join(''):given.join(' → '))}}
 function bindMatch(q){const w=Q.work;
   const L=app.querySelectorAll('[data-ml]'),Rb=app.querySelectorAll('[data-mr]');
@@ -1182,6 +1323,9 @@ function bindMatch(q){const w=Q.work;
     else{w.miss++;b.classList.add('wrong');L[li].classList.add('wrong');sfx.bad();setTimeout(()=>{b.classList.remove('wrong');L[li].classList.remove('wrong')},450)}})}
 
 function ansHTML(q){if(q.optPics&&q.optPics[q.a])return `<span class="ans-pic">${q.optPics[q.a]}</span> ${esc(q.a)}`;return esc(answerText(q))}
+function useChance(){if(!Q||!Q.chance||Q.answered)return false;Q.chance=0;sfx.bad();const b=buddyOf(P());
+  document.getElementById('fb').innerHTML=`<div class="fb bad"><div><strong>Try again!</strong><p>${esc(b?b.name:'Your buddy')} gave you a second chance.</p></div></div>`;
+  if(P().autoRead)speak('Try again!');return true}
 function answerText(q){if(q.kind==='order')return q.a.join(' → ');if(q.kind==='match')return q.pairs.map(p=>`${p[0]} = ${p[1]}`).join(', ');return q.a}
 function submit(ok,given){if(Q.answered)return;Q.answered=true;const p=P();rollDay(p);const q=Q.list[Q.i];Q.res[Q.i]=ok;
   const st=p.stats[q.subj],sk=q.subj+':'+q.s;st.t++;p.strands[sk]=p.strands[sk]||{c:0,t:0};p.strands[sk].t++;p.today.n++;remember(p,q);
@@ -1189,8 +1333,8 @@ function submit(ok,given){if(Q.answered)return;Q.answered=true;const p=P();rollD
   const minT=q.kind!=='mc'?0:q.st===0?Math.min(4500,1300+(q.say||q.q).length*55):Math.min(4000,1200+q.q.length*22+(q.p?q.p.length*8:0)),tooQuick=ok&&minT&&(Date.now()-Q.shownAt)<minT;
   if(ok){st.c++;p.strands[sk].c++;Q.combo++;
     if(tooQuick){Q.quick++;addXP(4);Q.xp+=4;extra=`<span class="note">${q.st===0?'Listen first, then tap!':'Too quick to count for coins. Read carefully first!'}</span>`}
-    else{let c=5+(Q.combo>=3?3:0)+(q.rev?3:0);coinsGot=earn(p,c);Q.c+=coinsGot;addXP(10);Q.xp+=10;if(Q.combo>=3)extra=`<span class="combo">Combo ×${Q.combo}!</span>`}
-    if(q.rev){const r=reviewRight(p,q);if(r==='mastered'){Q.mastered++;extra+=`<span class="combo">Mastered!</span>`}}
+    else{let c=5+(Q.combo>=3?3:0)+(q.rev?3:0)+(hasPower(p,'coins')?2:0);coinsGot=earn(p,c);Q.c+=coinsGot;const gx=10+(hasPower(p,'xp')?3:0);addXP(gx);Q.xp+=gx;if(Q.combo>=3)extra=`<span class="combo">Combo ×${Q.combo}!</span>`}
+    if(q.rev){const r=reviewRight(p,q);if(r==='mastered'){Q.mastered++;p.mastered=(p.mastered||0)+1;extra+=`<span class="combo">Mastered!</span>`}}
     if(Q.boss){Q.boss.hp--;sfx.hit()}else sfx.good()}
   else{Q.combo=0;addXP(2);Q.xp+=2;addMistake(p,q);sfx.bad();if(Q.boss)Q.boss.hearts--}
   if(q.subj&&Q.mode!=='review'&&Q.mode!=='mystery'){const sj=q.subj,before=stepOf(p,sj);p.sp[sj]=Math.max(0,(p.sp[sj]||0)+(ok?1:-1));
@@ -1202,7 +1346,7 @@ function submit(ok,given){if(Q.answered)return;Q.answered=true;const p=P();rollD
   const bossOver=Q.boss&&(Q.boss.hp<=0||Q.boss.hearts<=0);
   if(Q.boss&&!bossOver&&Q.i===Q.list.length-1){Q.list.push(genOne(Q.key,effStage(p,Q.key),new Set(Q.list.map(x=>x.sig)),stepOf(p,Q.key)))}
   const last=bossOver||(!Q.boss&&Q.i===Q.list.length-1);
-  if(Q.boss){const hp=app.querySelector('.hp i');if(hp)hp.style.width=(Math.max(0,Q.boss.hp)/Q.boss.max*100)+'%';const sm=app.querySelector('.bossbar small');if(sm)sm.textContent=`Boss health ${Math.max(0,Q.boss.hp)}/${Q.boss.max}`;const hs=app.querySelector('.hearts');if(hs)hs.innerHTML=[0,1,2].map(i=>heartSVG(i<Q.boss.hearts)).join('');const bf=app.querySelector('.boss-face');if(bf){bf.classList.remove('hit');void bf.offsetWidth;if(ok)bf.classList.add('hit')}}
+  if(Q.boss){const hp=app.querySelector('.hp i');if(hp)hp.style.width=(Math.max(0,Q.boss.hp)/Q.boss.max*100)+'%';const sm=app.querySelector('.bossbar small');if(sm)sm.textContent=`Boss health ${Math.max(0,Q.boss.hp)}/${Q.boss.max}`;const hs=app.querySelector('.hearts');if(hs)hs.innerHTML=Array.from({length:Q.boss.maxH},(_,i)=>heartSVG(i<Q.boss.hearts)).join('');const bf=app.querySelector('.boss-face');if(bf){bf.classList.remove('hit');void bf.offsetWidth;if(ok)bf.classList.add('hit')}}
   const kid=q.st===0,head=ok?(kid?pick(['Yes! Well done!','Great job!','Super!']):pick(['Brilliant!','Treasure found!','Spot on!','Full sails!'])):(kid?'Oops! Look:':pick(['Nearly there!','Good try!','Not quite!']));
   document.getElementById('fb').innerHTML=`<div class="fb ${ok?'good':'bad'} ${kid?'kidfb':''}"><div><strong>${head}</strong>
    <p>${ok?'':`The answer is <b>${ansHTML(q)}</b>. `}${esc(q.why)}</p>${!ok&&!kid?'<p class="muted" style="margin:2px 0 0;font-size:14px">This question will come back in Fix my mistakes.</p>':''}${extra?`<div class="row" style="margin-top:4px">${extra}</div>`:''}</div>
@@ -1210,39 +1354,30 @@ function submit(ok,given){if(Q.answered)return;Q.answered=true;const p=P();rollD
   if(P().autoRead){const said=q.kind==='match'?'':String(q.sayAns||(Array.isArray(q.a)?q.a.join(', '):q.a));speak(ok?head.replace(/!.*$/,'!')+(kid&&said?' '+said+'.':''):(said?'The answer is '+said+'.':'Good try.'))}
   const nb=document.getElementById('nextBtn');nb.focus();nb.onclick=()=>{if(last)finish();else{Q.i++;renderQuest()}}}
 function addXP(x){const p=P();const before=lvlOf(p);p.xp+=x;p.week.xp+=x;const after=lvlOf(p);
-  if(after>before){earn(p,20,true);const un=AVATARS.find(a=>a.lvl===after);setTimeout(()=>{toast(`Level ${after}! +20 coins${un?`. New character: ${un.name}!`:''}`);sfx.win();confetti()},250)}}
+  if(after>before){earn(p,20,true);const un=AVATARS.find(a=>a.lvl===after),ua=ACCS.find(a=>a.how.lvl===after);setTimeout(()=>{toast(`Level ${after}! +20 coins${un?`. New character: ${un.name}!`:''}${ua?`. New item: ${ua.name}!`:''}`);sfx.win();confetti()},250)}}
 function finish(){const p=P(),answered=Q.res.length,right=Q.res.filter(Boolean).length,acc=right/answered;let title,msg='',bonus=0;
-  const t=todayKey();if(p.lastDay!==t){p.streak=p.lastDay===yesterdayKey()?p.streak+1:1;p.lastDay=t}
+  const t=todayKey();let saved=false;if(p.lastDay!==t){const twoAgo=dk(new Date(Date.now()-2*864e5));
+    if(p.lastDay===yesterdayKey())p.streak++;else if(p.lastDay===twoAgo&&hasPower(p,'shield')&&p.shieldWeek!==weekKey()){p.streak++;p.shieldWeek=weekKey();saved=true}else p.streak=1;
+    p.lastDay=t;p.bestStreak=Math.max(p.bestStreak||0,p.streak)}
   if(Q.mode==='normal'){p.quests[Q.key]++;p.flags[Q.key]=Math.min(5,p.flags[Q.key]+1)}
   if(Q.mode==='boss'){const won=Q.boss.hp<=0;if(won){p.tier[Q.key]++;p.flags[Q.key]=0;p.bosses++;bonus=earn(p,60,true);title=`You beat ${BOSSES[Q.key].name}!`;msg=`${SUBJ[Q.key].name} is now island level ${p.tier[Q.key]}.${p.bosses===1?' Mystery Isle has appeared on the map!':''}`}
     else{title=`${BOSSES[Q.key].name} got away!`;msg='Practise a little, then try again. The boss is still waiting.'}}
   else{if(acc>=.8&&Q.quick<2){bonus=earn(p,acc===1?20:10);msg=`${acc===1?'Perfect':'80%+'} bonus: +${bonus} coins.`}else if(Q.quick>=2)msg='Some answers were too quick, so no quest bonus this time.';
     if(Q.mode==='mystery')bonus+=earn(p,10);
     title=acc===1?'Perfect voyage!':acc>=.5?'Great sailing!':'Every captain practises!'}
+  if(saved)msg+=` ${buddyOf(p).name} saved your streak!`;
   if(Q.mastered)msg+=` You mastered ${Q.mastered} mistake${Q.mastered===1?'':'s'}!`;
   if(Q.levelChange){const s=SUBJ[Q.levelChange.subj].subject;msg+=Q.levelChange.dir==='up'?` ${s} moved up to ${stageName(effStage(P(),Q.levelChange.subj))}!`:` ${s} will be a bit easier for a while.`}
   Q.c+=bonus;save();renderChrome();sfx.win();if(acc>=.8||(Q.boss&&Q.boss.hp<=0))confetti();const s=Q.boss?{col:'var(--grape)',btn:'grape'}:qColor();
   const again=Q.mode==='boss'?(Q.boss.hp<=0?`<button class="btn ${SUBJ[Q.key].btn}" data-go="${Q.key}">Keep sailing</button>`:`<button class="btn grape" data-boss="${Q.key}">Try again</button>`):Q.mode==='review'?'<button class="btn red" data-review="1">Fix more</button>':Q.mode==='mystery'?'<button class="btn grape" data-mystery="1">Explore again</button>':`<button class="btn ${s.btn}" data-go="${Q.key}">Sail again</button>`;
   app.innerHTML=`<section class="quest"><div class="q-head" style="background:${s.col}"><h2>${Q.mode==='boss'?'Boss battle':Q.mode==='review'?'Fix my mistakes':esc(qColor().name)}</h2></div><div class="result">
-   <div class="face">${Q.boss&&Q.boss.hp<=0?pixel(BOSSES[Q.key].map,BOSSES[Q.key].pal,''):avSVG(p.avatar)}</div><h2>${title}</h2>
+   <div class="face">${Q.boss&&Q.boss.hp<=0?pixel(BOSSES[Q.key].map,BOSSES[Q.key].pal,''):dressSVG(p)}</div><h2>${title}</h2>
    <p>You got <b>${right} of ${answered}</b> right. ${esc(msg)}</p>
    <div class="stats3"><div><b>+${Q.xp}</b><small>XP</small></div><div><b>+${Q.c}</b><small>coins</small></div><div><b>${p.streak}</b><small>day streak</small></div></div>
    <div class="row" style="justify-content:center;margin-top:8px">${again}<button class="btn" data-view="shop">Rewards</button><button class="btn ghost" data-view="map">Islands</button></div></div></section>`;
   document.getElementById('tabs').hidden=false}
 
 /* --- crew --- */
-function renderCrew(newPet){const p=P(),lvl=lvlOf(p),left=PETS.filter(m=>!p.pets.includes(m.id));
-  app.innerHTML=`<section class="card"><h2 style="font-size:26px">Your character</h2><p class="muted">Level up to unlock more. You're level ${lvl}.</p>
-   <div class="avatars">${AVATARS.map(a=>{const lock=a.lvl>lvl;return `<button class="av ${lock?'locked':''}" ${lock?'disabled':''} data-av="${a.id}" aria-pressed="${a.id===p.avatar}">${avSVG(a.id)}<span>${a.name.split(' ')[0]}</span><small>${lock?`Level ${a.lvl}`:a.name.split(' the ')[1]||''}</small></button>`}).join('')}</div></section>
-  <h2 class="sec-title">Pets</h2>
-  <div class="hatch"><div class="egg" id="egg" aria-hidden="true"></div><div style="flex:1 1 200px;min-width:0"><h2>Mystery egg</h2>
-   <p>${left.length?`Pets are little friends you collect. Each egg costs 50 coins. You have ${fmt(p.coins)}. ${left.length} pets are still hiding.`:'You found every pet. Legendary crew!'}</p>
-   <button class="btn" id="hatchBtn" ${p.coins<50||!left.length?'disabled':''}>Hatch for 50 coins</button></div></div>
-  <div class="pets" style="margin-top:14px">${PETS.map(m=>{const has=p.pets.includes(m.id);return `<div class="pet ${has?'':'locked'} ${m.id===newPet?'new':''}">${petSVG(m)}<h3>${has?m.name:'???'}</h3><p>${has?m.d:'Hatch an egg to meet them.'}</p></div>`}).join('')}</div>`;
-  app.querySelectorAll('[data-av]').forEach(b=>b.onclick=()=>{p.avatar=b.dataset.av;save();renderChrome();renderCrew();sfx.coin()});
-  document.getElementById('hatchBtn').onclick=()=>{if(p.coins<50||!left.length)return;p.coins-=50;const m=pick(left);p.pets.push(m.id);save();
-   document.getElementById('egg').classList.add('shake');sfx.coin();setTimeout(()=>{renderChrome();renderCrew(m.id);toast(`${m.name} joined your crew!`);sfx.win();confetti()},900)}}
-
 /* --- rewards --- */
 function renderShop(){const p=P(),mine=F.claims.filter(c=>c.pid===p.id).sort((a,b)=>b.at-a.at).slice(0,8);
   app.innerHTML=`<section class="card wallet"><div><span class="eyebrow">My coins</span><div class="big"><i class="coin"></i>${fmt(p.coins)}</div></div>
@@ -1260,7 +1395,7 @@ function renderShop(){const p=P(),mine=F.claims.filter(c=>c.pid===p.id).sort((a,
 function renderLeaders(){const rows=F.profiles.map(p=>({p,score:lbMode==='week'?weekXP(p):p.xp})).sort((a,b)=>b.score-a.score);
   app.innerHTML=`<h2 class="sec-title" style="margin-top:4px">Family leaderboard</h2>
    <div class="seg" role="group"><button data-lb="week" aria-pressed="${lbMode==='week'}">This week</button><button data-lb="all" aria-pressed="${lbMode==='all'}">All time</button></div>
-   <section class="board">${rows.map((r,i)=>`<div class="card lrow ${r.p.id===F.active?'me':''}"><span class="rank ${i<3?'r'+(i+1):''}">${i+1}</span><span class="face">${avSVG(r.p.avatar)}</span>
+   <section class="board">${rows.map((r,i)=>`<div class="card lrow ${r.p.id===F.active?'me':''}"><span class="rank ${i<3?'r'+(i+1):''}">${i+1}</span><span class="face">${dressSVG(r.p)}</span>
     <div style="min-width:0"><b>${esc(r.p.name)}</b><small>Level ${lvlOf(r.p)} · ${r.p.bosses} boss${r.p.bosses===1?'':'es'} beaten · ${r.p.streak}-day streak</small></div><span class="score">${fmt(r.score)}<small style="display:block;font-family:var(--body);font-size:12px">XP</small></span></div>`).join('')}</section>
    <p style="color:#fff;font-weight:700;margin-top:14px">${F.profiles.length<2?'Add a brother, sister or cousin in Grown-ups to compete. ':''}The weekly board resets every Monday.</p>`;
   app.querySelectorAll('[data-lb]').forEach(b=>b.onclick=()=>{lbMode=b.dataset.lb;renderLeaders()})}
@@ -1286,7 +1421,7 @@ function renderGrown(){
     return rows.length?`<div class="tbl-wrap"><table><thead><tr><th>Subject</th><th>Topic</th><th>Right</th><th>Status</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${SUBJ[r.sub].subject}</td><td>${r.str}</td><td>${r.c}/${r.t} (${r.p}%)</td><td><span class="chip ${r.p>=80?'ok':r.p>=55?'wait':'no'}">${r.p>=80?'Strong':r.p>=55?'Getting there':'Needs practice'}</span></td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Topics appear after the first quest, weakest first.</p>'})()}</section>
 
   <section class="card gsec"><h2>Players</h2><p class="muted">Each child gets their own progress. The stage is a starting point. Each right answer moves the child forward (each wrong answer one point back); 3 steps of 10 points each unlock the next stage. Pick <b>Stage 0</b> for a child who is just starting to read: short questions, big pictures, everything read aloud.</p>
-   <div class="list">${F.profiles.map(p=>`<div class="li"><span style="width:44px">${avSVG(p.avatar)}</span><div class="grow"><b>${esc(p.name)}</b><div class="muted" style="margin:0;font-size:14px">Level ${lvlOf(p)} · ${fmt(p.coins)} coins · ${p.review.length} to fix</div></div>
+   <div class="list">${F.profiles.map(p=>`<div class="li"><span style="width:44px">${dressSVG(p)}</span><div class="grow"><b>${esc(p.name)}</b><div class="muted" style="margin:0;font-size:14px">Level ${lvlOf(p)} · ${fmt(p.coins)} coins · ${p.review.length} to fix</div></div>
     <select data-stage="${p.id}" aria-label="Stage for ${esc(p.name)}" style="width:auto">${[0,1,2,3,4,5,6].map(n=>`<option value="${n}" ${n===p.stage?'selected':''}>${stageName(n)}</option>`).join('')}</select>
     <button class="btn sm ghost" data-bonus="${p.id}">+50 coins</button><button class="btn sm red" data-del="${p.id}">Remove</button>
     <div class="toggles"><label class="tg"><input type="checkbox" data-auto="${p.id}" ${p.autoRead?'checked':''}> Read questions aloud automatically</label><label class="tg"><input type="checkbox" data-indo="${p.id}" ${p.indo?'checked':''}> Show Bahasa Indonesia help</label></div></div>`).join('')}</div>
