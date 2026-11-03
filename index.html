@@ -355,6 +355,10 @@ input.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,
 .tg{display:flex;gap:8px;align-items:center;font-weight:700;font-size:14px}
 .tg input{width:20px;height:20px;accent-color:var(--leaf)}
 @media (max-width:380px){.starter .opts{grid-template-columns:1fr 1fr}}
+
+.howto{margin-top:14px;background:var(--card-2);border-radius:12px;padding:10px 14px}
+.howto summary{font-weight:800;cursor:pointer}
+.howto p{margin:8px 0 0;max-width:70ch}
 </style>
 
 <header class="bar" id="bar" hidden>
@@ -850,6 +854,7 @@ function petSVG(m){const c=m.c,a=m.a,ink='#2a1f4a';let f='';
 
 
 
+
 /* ===================== BOSSES ===================== */
 const BOSSES={
  math:{name:'Calculator Crab',pal:{r:'#e8442e',y:'#ffc531',W:'#fff',K:'#1a1333'},map:['.r........r.','rr........rr','r.r......r.r','...rrrrrr...','..rWKrrWKr..','.rrrrrrrrrr.','rrrrryyrrrrr','.rrrrrrrrrr.','..rrrrrrrr..','.r.r.rr.r.r.','r..r....r..r','............']},
@@ -922,8 +927,22 @@ function tone(fs,dur=.12,type='square'){if(F.muted)return;try{AC=AC||new(window.
   fs.forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;const t=AC.currentTime+i*dur;
     g.gain.setValueAtTime(.07,t);g.gain.exponentialRampToValueAtTime(.001,t+dur*1.6);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+dur*1.7)})}catch(e){}}
 const sfx={good:()=>tone([660,880]),bad:()=>tone([220,170],.16,'sawtooth'),win:()=>tone([523,659,784,1046],.11),coin:()=>tone([988,1319],.07),hit:()=>tone([180,120],.08,'square'),tap:()=>tone([520],.04)};
-function speak(t,lang='en-GB',rate){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=lang;u.rate=rate||(P()&&isStarter(P())?.8:.9);
-  const vs=speechSynthesis.getVoices();const v=vs.find(x=>x.lang===lang)||vs.find(x=>x.lang&&x.lang.slice(0,2)===lang.slice(0,2));if(v)u.voice=v;speechSynthesis.speak(u)}catch(e){toast('Read aloud is not available on this device')}}
+/* ---- voices: pick the most natural voice the device has ---- */
+const NOVELTY=/albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|good news|hysterical|jester|junior|organ|superstar|trinoids|whisper|wobble|zarvox|fred|ralph|kathy|grandma|grandpa|eddy|flo|reed|rocko|sandy|shelley/i;
+function voiceScore(v,lang){const id=(v.name+' '+(v.voiceURI||'')).toLowerCase();let s=0;
+  if(NOVELTY.test(v.name))return -99;
+  if(/premium/.test(id))s+=8;if(/enhanced/.test(id))s+=6;if(/natural|neural|online/.test(id))s+=6;if(/google/.test(id))s+=4;if(/siri/.test(id))s+=4;
+  if(v.lang===lang||v.lang===lang.replace('-','_'))s+=3;else if(lang==='en-GB'&&/^en[-_](US|AU|IE)/.test(v.lang))s+=1;
+  if(/serena|daniel|kate|martha|arthur|stephanie|libby|sonia|ryan|samantha|ava|zoe|damayanti|gadis|ardi/i.test(v.name))s+=1;
+  if(v.localService===false)s+=1;return s}
+let VOICES=[];
+function loadVoices(){try{VOICES=speechSynthesis.getVoices()||[]}catch(e){VOICES=[]}return VOICES}
+function voicesFor(lang){const pre=lang.slice(0,2);return loadVoices().filter(v=>v.lang&&v.lang.slice(0,2).toLowerCase()===pre).map(v=>({v,s:voiceScore(v,lang)})).filter(x=>x.s>-50).sort((a,b)=>b.s-a.s)}
+function voiceFor(lang){const key=lang.startsWith('id')?F.voiceId:F.voiceEn;const list=voicesFor(lang);
+  if(key){const m=list.find(x=>x.v.voiceURI===key||x.v.name===key);if(m)return m.v}return list[0]?list[0].v:null}
+try{if('speechSynthesis' in window){loadVoices();speechSynthesis.onvoiceschanged=()=>{loadVoices();if(view==='grown'&&grownOpen!==null&&document.getElementById('voiceEn'))renderGrown()}}}catch(e){}
+function speak(t,lang='en-GB',rate){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);const v=voiceFor(lang);if(v){u.voice=v;u.lang=v.lang}else u.lang=lang;
+  const base=F.rate||1;u.rate=(rate||(P()&&isStarter(P())?.85:.95))*base;u.pitch=1;speechSynthesis.speak(u)}catch(e){toast('Read aloud is not available on this device')}}
 
 /* ===================== SUBJECTS ===================== */
 const SUBJ={
@@ -1191,7 +1210,22 @@ function renderGrown(){
    <textarea id="loadCode" placeholder="Paste a save code from another device" aria-label="Paste save code" style="margin-top:12px"></textarea>
    <div class="row" style="margin-top:8px"><button class="btn sm ghost" id="loadBtn">Load save code</button></div><div id="loadBox"></div></section>
 
-  <section class="card gsec"><h2>Sound</h2><div class="row" style="margin-top:6px"><button class="btn sm ghost" id="snd">${F.muted?'Turn sound on':'Turn sound off'}</button></div></section>`;
+  <section class="card gsec"><h2>Sound</h2><div class="row" style="margin-top:6px"><button class="btn sm ghost" id="snd">${F.muted?'Turn game sounds on':'Turn game sounds off'}</button></div></section>
+
+  <section class="card gsec"><h2>Reading voice</h2>
+   <p class="muted">The game reads with the voices built into this device. The best ones are picked automatically, marked with a star. Try them and keep the one your child understands best.</p>
+   ${(()=>{const en=voicesFor('en-GB'),idv=voicesFor('id-ID'),cur=voiceFor('en-GB'),curI=voiceFor('id-ID'),lab=x=>`${x.s>=6?'★ ':''}${x.v.name} (${x.v.lang})`;
+    if(!en.length)return '<p class="note">No English voice found yet. Open this tab again in a moment, or follow the steps below to download one.</p>';
+    return `<div class="form">
+     <label class="f" for="voiceEn">English voice<select id="voiceEn">${en.map(x=>`<option value="${esc(x.v.voiceURI||x.v.name)}" ${cur&&x.v===cur?'selected':''}>${esc(lab(x))}</option>`).join('')}</select></label>
+     <label class="f" for="voiceId">Indonesian voice<select id="voiceId">${idv.length?idv.map(x=>`<option value="${esc(x.v.voiceURI||x.v.name)}" ${curI&&x.v===curI?'selected':''}>${esc(lab(x))}</option>`).join(''):'<option value="">None on this device</option>'}</select></label>
+     <label class="f" for="rateSel">Speed<select id="rateSel">${[[.8,'Slower'],[.9,'A little slower'],[1,'Normal']].map(([v,l])=>`<option value="${v}" ${(F.rate||1)==v?'selected':''}>${l}</option>`).join('')}</select></label></div>
+     <div class="row" style="margin-top:12px"><button class="btn sm" id="testEn">Test English</button><button class="btn sm ghost" id="testId">Test Indonesian</button></div>`})()}
+   <details class="howto"><summary>Get a more natural voice (free)</summary>
+    <p><b>iPad / iPhone:</b> Settings → Accessibility → Spoken Content → Voices → English → pick a voice such as <b>Serena</b>, <b>Daniel</b> or <b>Kate</b> (UK) and tap the download button next to <b>Premium</b> or <b>Enhanced</b>. For Indonesian: Voices → Indonesian → <b>Damayanti (Enhanced)</b>. Then close and reopen the game and choose the new voice here.</p>
+    <p><b>Android:</b> Settings → search "Text-to-speech" → Preferred engine: <b>Speech Services by Google</b> → tap the settings icon → Install voice data → English (United Kingdom) and Indonesian. Then reopen the game.</p>
+    <p><b>Computer:</b> Chrome and Edge include natural online voices ("Google UK English" or "Microsoft … Online (Natural)"). They appear here automatically.</p>
+   </details></section>`;
 
   const reG=()=>{save();renderChrome();renderGrown()};
   app.querySelectorAll('[data-ok]').forEach(b=>b.onclick=()=>{F.claims.find(c=>c.id===b.dataset.ok).status='approved';reG();toast('Approved')});
@@ -1218,6 +1252,11 @@ function renderGrown(){
    document.getElementById('loadBox').innerHTML=`<div class="row" style="margin-top:10px"><b>Replace everything on this device with ${d.profiles.length} player(s) from the code?</b><button class="btn sm red" id="ldYes">Yes, load</button><button class="btn sm ghost" id="ldNo">Cancel</button></div>`;
    document.getElementById('ldNo').onclick=renderGrown;document.getElementById('ldYes').onclick=()=>{F=Object.assign(freshFamily(),d);F.profiles.forEach(upgrade);save();grownOpen=false;view='who';render();toast('Save loaded')}};
   document.getElementById('snd').onclick=()=>{F.muted=!F.muted;reG()};
+  const ve=document.getElementById('voiceEn');if(ve){ve.onchange=()=>{F.voiceEn=ve.value;save();speak('Hello! Tap the cat.')};
+   const vi=document.getElementById('voiceId');vi.onchange=()=>{F.voiceId=vi.value;save();speak('Halo! Ketuk gambar kucing.','id-ID')};
+   document.getElementById('rateSel').onchange=e=>{F.rate=+e.target.value;save();speak('Hello! Tap the cat.')};
+   document.getElementById('testEn').onclick=()=>speak('Hello! Tap the cat. What colour is it? Well done!');
+   document.getElementById('testId').onclick=()=>speak('Halo! Dengarkan, lalu ketuk gambar yang benar.','id-ID')}
 }
 
 /* ===================== ROUTER ===================== */
