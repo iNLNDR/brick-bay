@@ -359,6 +359,17 @@ input.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,
 .howto{margin-top:14px;background:var(--card-2);border-radius:12px;padding:10px 14px}
 .howto summary{font-weight:800;cursor:pointer}
 .howto p{margin:8px 0 0;max-width:70ch}
+
+.stepbox{background:var(--card-2);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:6px}
+.stepbox b{font-size:15px}.stepbox small{font-weight:700;color:var(--ink-soft);font-size:13px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.steps i{height:12px;border-radius:4px;background:var(--line);overflow:hidden}
+.steps i b{display:block;height:100%;background:var(--leaf);transition:width .4s}
+.opt.pic .pic svg[aria-label$="pencil"]{height:auto;max-width:100%}
+.opts.bars{grid-template-columns:1fr!important}
+.opts.bars .opt.pic{min-height:64px;align-items:flex-start}
+.opts.bars .opt.pic .pic{display:block;width:100%;text-align:left}
+.opts.bars .opt.pic .pic svg{height:auto;display:block}
 </style>
 
 <header class="bar" id="bar" hidden>
@@ -663,73 +674,135 @@ const EG=[
  {id:'engbank',lo:1,hi:6,w:3,bank:1,f(st){const pool=ENG_BANK.filter(b=>st>=b[4]&&st<=b[5]);const b=pick(pool.length?pool:ENG_BANK);return {s:b[3],q:b[0],a:b[1],w:b[2],why:b[6],p:b[7]}}}
 ];
 // fix "X" placeholder in word-class explanations after the answer is chosen
-/* ---------- STARTER (stage 0): for children still learning to read ----------
-   Very short questions, big pictures, spoken prompts (say), Indonesian task hints (idn). */
+/* ---------- STAGE 0: children just starting to read ----------
+   Every generator is f(st,d). d = step 1–3 inside the stage:
+   step 1 = 2 choices and small numbers, step 2 = 3 choices, step 3 = 4 choices and bigger numbers.
+   say = what is read aloud, idn = Indonesian task hint. */
 const big=e=>`<div class="emo">${e}</div>`;
 const rowOf=(e,n,gone=0)=>`<div class="emo-row">${Array.from({length:n},(_,i)=>`<span class="${i>=n-gone?'gone':''}">${e}</span>`).join('')}</div>`;
 const sw=(c,cls='')=>`<span class="swatch ${cls}" style="background:${c}"></span>`;
 const qmark='<span class="qmark">?</span>';
-const NUMW=['zero','one','two','three','four','five','six','seven','eight','nine','ten'];
+const NUMW=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve'];
+const D=d=>Math.max(1,Math.min(3,d||2));
 const V0={
- animal:[['cat','🐱'],['dog','🐶'],['fish','🐟'],['bird','🐦'],['cow','🐮'],['duck','🦆'],['frog','🐸'],['horse','🐴'],['sheep','🐑'],['monkey','🐵'],['elephant','🐘'],['lion','🦁'],['tiger','🐯'],['bear','🐻'],['snake','🐍'],['mouse','🐭'],['spider','🕷️'],['giraffe','🦒'],['crocodile','🐊'],['pig','🐷'],['rabbit','🐰'],['chicken','🐔']],
- food:[['apple','🍎'],['banana','🍌'],['egg','🥚'],['cake','🍰'],['bread','🍞'],['milk','🥛'],['orange','🍊'],['rice','🍚'],['ice cream','🍦'],['pizza','🍕'],['carrot','🥕'],['pear','🍐'],['burger','🍔'],['watermelon','🍉'],['lemon','🍋']],
- thing:[['ball','⚽'],['book','📖'],['car','🚗'],['bus','🚌'],['bike','🚲'],['boat','⛵'],['train','🚂'],['robot','🤖'],['teddy bear','🧸'],['hat','👒'],['shoe','👟'],['sock','🧦'],['bag','🎒'],['clock','⏰'],['phone','📱'],['house','🏠'],['tree','🌳'],['flower','🌸'],['sun','☀️'],['moon','🌙'],['star','⭐'],['bed','🛏️'],['door','🚪'],['pencil','✏️']],
- body:[['eyes','👀'],['ears','👂'],['nose','👃'],['mouth','👄'],['hand','✋'],['foot','🦶'],['teeth','🦷']]
+ animal:[['cat','🐱'],['dog','🐶'],['fish','🐟'],['bird','🐦'],['cow','🐮'],['duck','🦆'],['frog','🐸'],['horse','🐴'],['sheep','🐑'],['monkey','🐵'],['elephant','🐘'],['lion','🦁'],['tiger','🐯'],['bear','🐻'],['snake','🐍'],['mouse','🐭'],['spider','🕷️'],['giraffe','🦒'],['crocodile','🐊'],['pig','🐷'],['rabbit','🐰'],['chicken','🐔'],['zebra','🦓'],['goat','🐐']],
+ food:[['apple','🍎'],['banana','🍌'],['egg','🥚'],['cake','🍰'],['bread','🍞'],['milk','🥛'],['orange','🍊'],['rice','🍚'],['ice cream','🍦'],['pizza','🍕'],['carrot','🥕'],['pear','🍐'],['burger','🍔'],['watermelon','🍉'],['lemon','🍋'],['cheese','🧀'],['grapes','🍇'],['tomato','🍅']],
+ thing:[['ball','⚽'],['book','📖'],['car','🚗'],['bus','🚌'],['bike','🚲'],['boat','⛵'],['train','🚂'],['plane','✈️'],['robot','🤖'],['teddy bear','🧸'],['bag','🎒'],['clock','⏰'],['phone','📱'],['house','🏠'],['tree','🌳'],['flower','🌸'],['sun','☀️'],['moon','🌙'],['star','⭐'],['bed','🛏️'],['door','🚪'],['pencil','✏️'],['guitar','🎸']],
+ family:[['mum','👩'],['dad','👨'],['baby','👶'],['grandma','👵'],['grandpa','👴'],['brother','👦'],['sister','👧']],
+ body:[['eyes','👀'],['ears','👂'],['nose','👃'],['mouth','👄'],['hand','✋'],['foot','🦶'],['teeth','🦷'],['arm','💪']],
+ clothes:[['hat','👒'],['shoe','👟'],['sock','🧦'],['T-shirt','👕'],['dress','👗'],['trousers','👖'],['glasses','👓'],['jacket','🧥'],['cap','🧢'],['scarf','🧣']]
 };
-const ALL0=()=>[...V0.animal,...V0.food,...V0.thing];
+const catsFor=d=>D(d)===1?['animal','food']:D(d)===2?['animal','food','thing','family']:['animal','food','thing','family','body','clothes'];
+const byLen=(list,d)=>{const max=[5,7,99][D(d)-1];const f=list.filter(([w])=>w.length<=max&&(D(d)>1||!w.includes(' ')));return f.length>=4?f:list};
+const poolFor=d=>byLen(catsFor(d).flatMap(c=>V0[c]),d);
 const picsOf=list=>Object.fromEntries(list.map(([w,e])=>[w,e]));
 const COL0=[['red','#e53935'],['blue','#1e66f5'],['green','#2e9e44'],['yellow','#ffd31a'],['orange','#ff8a1f'],['purple','#8e44ad'],['pink','#ff7eb6'],['brown','#8b5a2b'],['black','#1b1b1b'],['white','#ffffff'],['grey','#9a9a9a']];
-const LET0=[['cat','🐱'],['dog','🐶'],['sun','☀️'],['bus','🚌'],['pig','🐷'],['fish','🐟'],['egg','🥚'],['apple','🍎'],['moon','🌙'],['nose','👃'],['ball','⚽'],['hat','👒'],['tree','🌳'],['lion','🦁'],['robot','🤖'],['milk','🥛'],['book','📖'],['frog','🐸'],['duck','🦆'],['rabbit','🐰']];
-const SP0=[['cat','🐱'],['dog','🐶'],['sun','☀️'],['bus','🚌'],['pig','🐷'],['hat','👒'],['egg','🥚'],['bed','🛏️'],['fox','🦊'],['bee','🐝'],['owl','🦉'],['ant','🐜'],['cup','☕'],['box','📦'],['car','🚗'],['fish','🐟'],['frog','🐸'],['duck','🦆'],['milk','🥛'],['book','📖']];
-const SOUNDS=[['cow','🐮','moo'],['dog','🐶','woof'],['cat','🐱','meow'],['duck','🦆','quack'],['sheep','🐑','baa'],['pig','🐷','oink'],['lion','🦁','roar'],['bird','🐦','tweet'],['snake','🐍','hiss'],['bee','🐝','buzz']];
-const OBJ0=[['apple','🍎'],['banana','🍌'],['star','⭐'],['ball','⚽'],['fish','🐟'],['car','🚗'],['cake','🍰'],['flower','🌸'],['duck','🦆'],['heart','❤️']];
+const COLOBJ=[['banana','🍌','yellow'],['apple','🍎','red'],['frog','🐸','green'],['carrot','🥕','orange'],['grapes','🍇','purple'],['strawberry','🍓','red'],['leaf','🍃','green'],['sun','☀️','yellow'],['snowman','⛄','white'],['pig','🐷','pink'],['elephant','🐘','grey'],['bear','🐻','brown'],['tomato','🍅','red'],['lemon','🍋','yellow']];
+const LET0=[['cat','🐱'],['dog','🐶'],['sun','☀️'],['bus','🚌'],['pig','🐷'],['fish','🐟'],['egg','🥚'],['apple','🍎'],['moon','🌙'],['nose','👃'],['ball','⚽'],['hat','👒'],['tree','🌳'],['lion','🦁'],['robot','🤖'],['milk','🥛'],['book','📖'],['frog','🐸'],['duck','🦆'],['rabbit','🐰'],['zebra','🦓'],['van','🚐'],['goat','🐐'],['jacket','🧥'],['umbrella','☂️']];
+const SP3=[['cat','🐱'],['dog','🐶'],['sun','☀️'],['bus','🚌'],['pig','🐷'],['hat','👒'],['egg','🥚'],['bed','🛏️'],['fox','🦊'],['bee','🐝'],['owl','🦉'],['ant','🐜'],['cup','☕'],['box','📦'],['car','🚗']];
+const SP4=[['fish','🐟'],['frog','🐸'],['duck','🦆'],['milk','🥛'],['book','📖'],['bird','🐦'],['lion','🦁'],['ball','⚽'],['cake','🍰'],['star','⭐'],['moon','🌙'],['tree','🌳'],['goat','🐐'],['bear','🐻']];
+const SP5=[['apple','🍎'],['horse','🐴'],['sheep','🐑'],['train','🚂'],['house','🏠'],['mouse','🐭'],['snake','🐍'],['tiger','🐯'],['zebra','🦓'],['pizza','🍕'],['clock','⏰'],['plane','✈️']];
+const SOUNDS=[['cow','🐮','moo'],['dog','🐶','woof'],['cat','🐱','meow'],['duck','🦆','quack'],['sheep','🐑','baa'],['pig','🐷','oink'],['lion','🦁','roar'],['bird','🐦','tweet'],['snake','🐍','hiss'],['bee','🐝','buzz'],['owl','🦉','hoot'],['horse','🐴','neigh']];
+const RHYME=[[['cat','🐱'],['hat','👒']],[['dog','🐶'],['frog','🐸']],[['bee','🐝'],['tree','🌳']],[['fox','🦊'],['box','📦']],[['mouse','🐭'],['house','🏠']],[['cake','🍰'],['snake','🐍']],[['moon','🌙'],['spoon','🥄']],[['star','⭐'],['car','🚗']],[['goat','🐐'],['boat','⛵']],[['bear','🐻'],['pear','🍐']],[['king','🤴'],['ring','💍']],[['sock','🧦'],['clock','⏰']]];
+const ACTIONS=[['running','🏃'],['swimming','🏊'],['sleeping','😴'],['dancing','💃'],['riding a bike','🚴'],['crying','😭'],['laughing','😂'],['climbing','🧗'],['surfing','🏄'],['singing','🎤'],['reading','📚'],['painting','🎨']];
+const FEEL=[['happy','😀'],['sad','😢'],['angry','😠'],['scared','😨'],['surprised','😮'],['sleepy','😪']];
+const OBJ0=[['apple','🍎'],['banana','🍌'],['star','⭐'],['ball','⚽'],['fish','🐟'],['car','🚗'],['cake','🍰'],['flower','🌸'],['duck','🦆'],['heart','❤️'],['balloon','🎈'],['shell','🐚']];
 const SH0=[['circle',0],['triangle',3],['square',4],['rectangle',-4]];
+const LETTERS='abcdefghijklmnopqrstuvwxyz';
+const wrongLetters=(L,n)=>sample('abdefghilmnoprstuw'.split('').filter(x=>x!==L),n);
+const numWrongs=(n,d,lo=0,hi=20)=>[n+1,n-1,n+2,n-2,n+3].filter(x=>x>=lo&&x<=hi&&x!==n).slice(0,D(d));
+
+/* ball / box picture for in, on, under, next to */
+function prepSVG(pos){const ball=(cx,cy)=>`<circle cx="${cx}" cy="${cy}" r="18" fill="#e8442e" stroke="var(--ink)" stroke-width="3"/><path d="M${cx-18} ${cy} Q${cx} ${cy-10} ${cx+18} ${cy}" stroke="#fff" stroke-width="3" fill="none"/>`;
+  const legs=`<rect x="84" y="128" width="10" height="34" fill="#a86b33" stroke="var(--ink)" stroke-width="2"/><rect x="166" y="128" width="10" height="34" fill="#a86b33" stroke="var(--ink)" stroke-width="2"/>`;
+  const back=`<rect x="76" y="70" width="108" height="20" fill="#c98b4a" stroke="var(--ink)" stroke-width="3"/>`;
+  const front=`<rect x="76" y="82" width="108" height="48" rx="3" fill="#e0a55e" stroke="var(--ink)" stroke-width="3"/><path d="M90 96 H170 M90 112 H170" stroke="#c98b4a" stroke-width="3"/>`;
+  const floor=`<rect x="0" y="162" width="260" height="8" fill="var(--line)"/>`;
+  let b='';if(pos==='in')b=ball(130,84);if(pos==='on')b=ball(130,51);if(pos==='under')b=ball(130,143);if(pos==='next to')b=ball(218,143);
+  const order=pos==='in'?back+b+front:back+front+b;
+  return `<svg viewBox="0 0 260 172" role="img" aria-label="A ball and a box">${floor}${legs}${order}</svg>`}
+function diceSVG(n){const P={1:[[50,50]],2:[[28,28],[72,72]],3:[[26,26],[50,50],[74,74]],4:[[28,28],[72,28],[28,72],[72,72]],5:[[26,26],[74,26],[50,50],[26,74],[74,74]],6:[[28,24],[72,24],[28,50],[72,50],[28,76],[72,76]]};
+  return `<svg viewBox="0 0 100 100" role="img" aria-label="Dice"><rect x="6" y="6" width="88" height="88" rx="16" fill="#fff" stroke="var(--ink)" stroke-width="5"/>${P[n].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="9" fill="#2a1f4a"/>`).join('')}</svg>`}
+function tenFrameSVG(n){let r='';for(let i=0;i<10;i++){const x=10+(i%5)*48,y=10+Math.floor(i/5)*48;r+=`<rect x="${x}" y="${y}" width="48" height="48" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>`;if(i<n)r+=`<circle cx="${x+24}" cy="${y+24}" r="16" fill="var(--brick)"/>`}
+  return `<svg viewBox="0 0 260 116" role="img" aria-label="Ten frame">${r}</svg>`}
+const BARCOL=[['red','#e53935'],['blue','#1e66f5'],['green','#2e9e44'],['yellow','#ffd31a']];
+const barSVG=(len,c)=>`<svg viewBox="0 0 120 28" role="img" aria-label="${c[0]} pencil" style="width:${Math.round(40+len*0.9)}%"><rect x="0" y="4" width="104" height="20" rx="3" fill="${c[1]}" stroke="var(--ink)" stroke-width="2"/><polygon points="104,4 120,14 104,24" fill="#f3d58b" stroke="var(--ink)" stroke-width="2"/></svg>`;
+
 const E0=[
- {id:'e0tap',lo:0,hi:0,w:4,f(){const set=sample(V0[pick(['animal','food','thing','animal'])],3),w=set[0][0];
+ {id:'e0tap',lo:0,hi:0,w:4,f(st,d){const cat=pick(catsFor(d));const set=sample(byLen(V0[cat],d),D(d)+1),w=set[0][0];
    return {s:'Vocabulary',q:`Tap the ${w}.`,say:`Tap the ${w}`,a:w,w:set.slice(1).map(x=>x[0]),optPics:picsOf(set),picOnly:1,idn:'Dengarkan, lalu ketuk gambar yang benar.',why:`${set[0][1]} ${w}`}}},
- {id:'e0body',lo:0,hi:0,w:1,f(){const set=sample(V0.body,3),w=set[0][0];
-   return {s:'Vocabulary',q:`Tap the ${w}.`,say:`Tap the ${w}`,a:w,w:set.slice(1).map(x=>x[0]),optPics:picsOf(set),picOnly:1,idn:'Dengarkan, lalu ketuk bagian tubuh yang benar.',why:`${set[0][1]} ${w}`}}},
- {id:'e0name',lo:0,hi:0,w:3,f(){const set=sample(ALL0(),3),[w,e]=set[0];
+ {id:'e0name',lo:0,hi:0,w:3,f(st,d){const set=sample(poolFor(d),D(d)+1),[w,e]=set[0];
    return {s:'Vocabulary',q:'What is it?',vis:big(e),a:w,w:set.slice(1).map(x=>x[0]),idn:'Ini apa? Pilih kata yang benar.',why:`${e} ${w}`}}},
- {id:'e0colour',lo:0,hi:0,w:2,f(){const set=sample(COL0,3),[w,c]=set[0];
+ {id:'e0listen',lo:0,hi:0,dmin:2,w:2,f(st,d){const set=sample(poolFor(d),D(d)+1),[w,e]=set[0];
+   return {s:'Reading',q:'Tap the word you hear.',say:w,a:w,w:set.slice(1).map(x=>x[0]),idn:'Dengarkan katanya, lalu ketuk tulisan yang benar.',why:`${e} ${w}`}}},
+ {id:'e0colour',lo:0,hi:0,w:2,f(st,d){const set=sample(COL0,D(d)+1),[w,c]=set[0];
    if(Math.random()<.5)return {s:'Vocabulary',q:`Tap ${w}.`,say:`Tap ${w}`,a:w,w:set.slice(1).map(x=>x[0]),optPics:Object.fromEntries(set.map(([n,cc])=>[n,sw(cc)])),picOnly:1,idn:'Dengarkan nama warnanya, lalu ketuk.',why:w};
    return {s:'Vocabulary',q:'What colour?',say:'What colour is it?',vis:`<div class="emo">${sw(c,'big')}</div>`,a:w,w:set.slice(1).map(x=>x[0]),idn:'Warna apa ini?',why:w}}},
- {id:'e0num',lo:0,hi:0,w:2,f(){const n=R(1,10),e=pick(OBJ0)[1],wr=[...new Set([n+1,n-1,n+2,n-2].filter(x=>x>=1&&x<=10))].slice(0,2);
-   return {s:'Vocabulary',q:'How many?',say:'How many? Pick the word.',vis:rowOf(e,n),a:NUMW[n],w:wr.map(x=>NUMW[x]),idn:'Ada berapa? Pilih kata angkanya (one, two, three...).',why:`${n} = ${NUMW[n]}`}}},
- {id:'e0letter',lo:0,hi:0,w:2,f(){const [w,e]=pick(LET0),L=w[0];
-   return {s:'Spelling',q:'First letter?',say:`${w}. What is the first letter?`,vis:big(e),a:L,w:sample('abdfhilmnoprstw'.split('').filter(x=>x!==L),2),idn:'Huruf pertamanya apa?',why:`${w} starts with ${L}`,sayAns:L}}},
- {id:'e0spell',lo:0,hi:0,w:2,f(){const [w,e]=pick(SP0);
+ {id:'e0colourof',lo:0,hi:0,dmin:2,w:2,f(st,d){const [w,e,c]=pick(COLOBJ);const wr=sample(COL0.filter(x=>x[0]!==c),D(d));
+   return {s:'Vocabulary',q:`What colour is the ${w}?`,vis:big(e),a:c,w:wr.map(x=>x[0]),optPics:Object.fromEntries([[c,sw(COL0.find(x=>x[0]===c)[1])],...wr.map(x=>[x[0],sw(x[1])])]),idn:'Benda ini warnanya apa?',why:`The ${w} is ${c}.`}}},
+ {id:'e0num',lo:0,hi:0,w:2,f(st,d){const n=R(1,[5,10,12][D(d)-1]),e=pick(OBJ0)[1];
+   return {s:'Vocabulary',q:'How many?',say:'How many? Pick the word.',vis:rowOf(e,n),a:NUMW[n],w:numWrongs(n,d,1,12).map(x=>NUMW[x]),idn:'Ada berapa? Pilih kata angkanya (one, two, three...).',why:`${n} = ${NUMW[n]}`}}},
+ {id:'e0letter',lo:0,hi:0,w:2,f(st,d){const [w,e]=pick(LET0),L=w[0];
+   return {s:'Spelling',q:'First letter?',say:`${w}. What is the first letter?`,vis:big(e),a:L,w:wrongLetters(L,D(d)),idn:'Huruf pertamanya apa?',why:`${w} starts with ${L}`,sayAns:L}}},
+ {id:'e0capital',lo:0,hi:0,dmin:2,w:1,f(st,d){const ls=sample(LETTERS.split(''),D(d)+1);
+   return {s:'Spelling',kind:'match',q:'Match big and small letters.',pairs:ls.map(l=>[l.toUpperCase(),l]),idn:'Pasangkan huruf besar dengan huruf kecilnya.',why:ls.map(l=>l.toUpperCase()+l).join('  ')}}},
+ {id:'e0abc',lo:0,hi:0,dmin:3,w:1,f(st,d){const i=R(0,22),seq=LETTERS.slice(i,i+3).split(''),ans=LETTERS[i+3];
+   return {s:'Spelling',q:'What comes next?',say:`${seq.join(', ')}. What comes next?`,vis:`<div class="emo numq">${seq.join(' ')} ${qmark}</div>`,a:ans,w:wrongLetters(ans,D(d)),idn:'Huruf apa selanjutnya?',why:`${seq.join(' ')} ${ans}`,sayAns:ans}}},
+ {id:'e0spell',lo:0,hi:0,w:2,f(st,d){const list=D(d)===1?SP3:D(d)===2?SP3.concat(SP4):SP4.concat(SP5);const [w,e]=pick(list);
    return {s:'Spelling',kind:'spell',q:'Spell it.',say:`${w}. Spell ${w}.`,vis:big(e),a:w,idn:'Susun hurufnya menjadi kata.',why:`${e} ${w}`}}},
- {id:'e0yes',lo:0,hi:0,w:2,f(){const set=sample(ALL0(),2),yes=Math.random()<.5,[w,e]=set[0],asked=yes?w:set[1][0];
+ {id:'e0yes',lo:0,hi:0,w:2,f(st,d){const set=sample(poolFor(d),2),yes=Math.random()<.5,[w,e]=set[0],asked=yes?w:set[1][0];
    return {s:'Vocabulary',q:`Is it ${an(asked)}?`,vis:big(e),a:yes?'Yes':'No',w:[yes?'No':'Yes'],idn:'Benar atau salah? Pilih Yes (ya) atau No (tidak).',why:`${e} ${w}`}}},
- {id:'e0match',lo:0,hi:0,w:2,f(){const set=sample(ALL0(),3);
+ {id:'e0match',lo:0,hi:0,w:2,f(st,d){const set=sample(poolFor(d),D(d)+1);
    return {s:'Vocabulary',kind:'match',q:'Match.',say:'Match the pictures and the words.',pairs:set.map(([w,e])=>[e,w]),idn:'Pasangkan gambar dengan katanya.',why:set.map(([w,e])=>`${e} ${w}`).join('  ')}}},
- {id:'e0sound',lo:0,hi:0,w:1,f(){const set=sample(SOUNDS,3),[w,e,s]=set[0];
-   return {s:'Vocabulary',q:`Who says "${s}"?`,say:`Who says ${s}?`,a:w,w:set.slice(1).map(x=>x[0]),optPics:Object.fromEntries(set.map(x=>[x[0],x[1]])),picOnly:1,idn:`Hewan mana yang bersuara "${s}"?`,why:`${e} ${w}: ${s}!`}}}
+ {id:'e0sound',lo:0,hi:0,w:1,f(st,d){const set=sample(SOUNDS,D(d)+1),[w,e,s]=set[0];
+   return {s:'Vocabulary',q:`Who says "${s}"?`,say:`Who says ${s}?`,a:w,w:set.slice(1).map(x=>x[0]),optPics:Object.fromEntries(set.map(x=>[x[0],x[1]])),picOnly:1,idn:`Hewan mana yang bersuara "${s}"?`,why:`${e} ${w}: ${s}!`}}},
+ {id:'e0rhyme',lo:0,hi:0,dmin:2,w:2,f(st,d){const [p,...rest]=shuffle(RHYME),[a,b]=p,wr=rest.slice(0,D(d)).map(x=>x[1]);
+   return {s:'Reading',q:`What rhymes with ${a[0]}?`,say:`${a[0]}. What rhymes with ${a[0]}?`,vis:big(a[1]),a:b[0],w:wr.map(x=>x[0]),optPics:picsOf([b,...wr]),picOnly:1,idn:'Mana yang bunyinya mirip (berima)?',why:`${a[0]} – ${b[0]}`}}},
+ {id:'e0prep',lo:0,hi:0,w:2,f(st,d){const all=D(d)===3?['in','on','under','next to']:['in','on','under'];const pos=pick(all);const wr=sample(all.filter(x=>x!==pos),D(d));
+   return {s:'Vocabulary',q:'Where is the ball?',vis:prepSVG(pos),a:pos,w:wr,idn:'Bolanya di mana?',why:`The ball is ${pos} the box.`}}},
+ {id:'e0doing',lo:0,hi:0,dmin:2,w:2,f(st,d){const set=sample(ACTIONS,D(d)+1),[w,e]=set[0];
+   return {s:'Vocabulary',q:'What are they doing?',vis:big(e),a:w,w:set.slice(1).map(x=>x[0]),idn:'Mereka sedang apa?',why:`${e} ${w}`}}},
+ {id:'e0feel',lo:0,hi:0,w:1,f(st,d){const set=sample(FEEL,D(d)+1),[w,e]=set[0];
+   return {s:'Vocabulary',q:'How do they feel?',vis:big(e),a:w,w:set.slice(1).map(x=>x[0]),idn:'Bagaimana perasaannya?',why:`${e} ${w}`}}},
+ {id:'e0size',lo:0,hi:0,w:1,f(st,d){const [w,e]=pick(OBJ0),size=pick(['big','small']);
+   return {s:'Vocabulary',q:`Tap the ${size} ${w}.`,say:`Tap the ${size} ${w}`,a:size,w:[size==='big'?'small':'big'],optPics:{big:`<span style="font-size:1.25em">${e}</span>`,small:`<span style="font-size:.5em">${e}</span>`},picOnly:1,idn:'Dengarkan: big (besar) atau small (kecil)?',why:`${size}`}}}
 ];
 const M0=[
- {id:'m0count',lo:0,hi:0,w:3,f(){const n=R(1,10),e=pick(OBJ0)[1];
-   return {s:'Number',q:'How many?',say:'How many can you count?',vis:rowOf(e,n),a:n,w:[n+1,n-1,n+2].filter(x=>x>=1).slice(0,2),num:1,idn:'Hitung. Ada berapa?',why:`${n}`}}},
- {id:'m0add',lo:0,hi:0,w:3,f(){const a=R(1,5),b=R(1,5),e=pick(OBJ0)[1];
-   return {s:'Calculation',q:`${a} + ${b} = ?`,say:`${a} plus ${b}. How many in all?`,vis:`<div class="emo-sum">${rowOf(e,a)}<b>+</b>${rowOf(e,b)}</div>`,a:a+b,w:[a+b+1,a+b-1,a+b+2].filter(x=>x>=1).slice(0,2),num:1,idn:'Tambahkan. Jumlahnya berapa?',why:`${a} + ${b} = ${a+b}`}}},
- {id:'m0take',lo:0,hi:0,w:2,f(){const a=R(3,8),b=R(1,a-1),e=pick(OBJ0)[1];
-   return {s:'Calculation',q:`${a} − ${b} = ?`,say:`${a} take away ${b}. How many are left?`,vis:rowOf(e,a,b),a:a-b,w:[a-b+1,a-b-1,a].filter(x=>x>=0).slice(0,2),num:1,idn:'Kurangi. Sisanya berapa?',why:`${a} − ${b} = ${a-b}`}}},
- {id:'m0more',lo:0,hi:0,w:2,f(){const [x,y]=sample(OBJ0,2);let n1=R(1,8),n2;do{n2=R(1,8)}while(n2===n1);const m=n1>n2?x:y;
-   return {s:'Number',q:'Which has more?',say:'Which group has more?',vis:`<div class="emo-cmp">${rowOf(x[1],n1)}<i></i>${rowOf(y[1],n2)}</div>`,a:m[0],w:[(m===x?y:x)[0]],optPics:{[x[0]]:x[1],[y[0]]:y[1]},picOnly:1,idn:'Mana yang lebih banyak?',why:`${n1} ${x[1]}  ${n2} ${y[1]}`}}},
- {id:'m0after',lo:0,hi:0,w:2,f(){const n=R(1,9);
-   return {s:'Number',q:`After ${n}?`,say:`What number comes after ${n}?`,vis:`<div class="emo numq">${n} ${qmark}</div>`,a:n+1,w:[n+2,n>1?n-1:n+3],num:1,idn:`Angka apa sesudah ${n}?`,why:`${n}, ${n+1}`}}},
- {id:'m0bigger',lo:0,hi:0,w:1,f(){const [a,b]=sample([1,2,3,4,5,6,7,8,9,10],2);
-   return {s:'Number',q:'Which is bigger?',say:'Which number is bigger?',a:Math.max(a,b),w:[Math.min(a,b)],idn:'Angka mana yang lebih besar?',why:`${Math.max(a,b)} > ${Math.min(a,b)}`}}},
- {id:'m0shape',lo:0,hi:0,w:2,f(){const set=sample(SH0,3),[w,n]=set[0];
+ {id:'m0count',lo:0,hi:0,w:3,f(st,d){const n=R(1,[5,10,12][D(d)-1]),e=pick(OBJ0)[1];
+   return {s:'Number',q:'How many?',say:'How many can you count?',vis:rowOf(e,n),a:n,w:numWrongs(n,d,1,15),num:D(d)>1?1:0,idn:'Hitung. Ada berapa?',why:`${n}`}}},
+ {id:'m0dice',lo:0,hi:0,w:1,f(st,d){const n=R(1,6);
+   return {s:'Number',q:'How many dots?',vis:diceSVG(n),a:n,w:numWrongs(n,d,1,6),idn:'Ada berapa titik?',why:`${n}`}}},
+ {id:'m0ten',lo:0,hi:0,dmin:2,w:2,f(st,d){const n=R(1,10);
+   return {s:'Number',q:'How many?',say:'How many dots are in the boxes?',vis:tenFrameSVG(n),a:n,w:numWrongs(n,d,0,10),num:1,idn:'Hitung titiknya. Ada berapa?',why:n>5?`5 + ${n-5} = ${n}`:`${n}`}}},
+ {id:'m0add',lo:0,hi:0,w:3,f(st,d){const max=[5,8,10][D(d)-1],a=R(1,max-1),b=R(1,max-a),e=pick(OBJ0)[1];
+   return {s:'Calculation',q:`${a} + ${b} = ?`,say:`${a} plus ${b}. How many in all?`,vis:`<div class="emo-sum">${rowOf(e,a)}<b>+</b>${rowOf(e,b)}</div>`,a:a+b,w:numWrongs(a+b,d,1,12),num:D(d)>1?1:0,idn:'Tambahkan. Jumlahnya berapa?',why:`${a} + ${b} = ${a+b}`}}},
+ {id:'m0take',lo:0,hi:0,w:2,f(st,d){const max=[5,8,10][D(d)-1],a=R(2,max),b=R(1,a-1),e=pick(OBJ0)[1];
+   return {s:'Calculation',q:`${a} − ${b} = ?`,say:`${a} take away ${b}. How many are left?`,vis:rowOf(e,a,b),a:a-b,w:numWrongs(a-b,d,0,10),num:D(d)>1?1:0,idn:'Kurangi. Sisanya berapa?',why:`${a} − ${b} = ${a-b}`}}},
+ {id:'m0more',lo:0,hi:0,w:2,f(st,d){const [x,y]=sample(OBJ0,2);let n1=R(1,[5,8,10][D(d)-1]),n2;do{n2=R(1,[5,8,10][D(d)-1])}while(n2===n1);const fewer=D(d)===3&&Math.random()<.5;const m=(n1>n2)!==fewer?x:y;
+   return {s:'Number',q:fewer?'Which has fewer?':'Which has more?',say:fewer?'Which group has fewer?':'Which group has more?',vis:`<div class="emo-cmp">${rowOf(x[1],n1)}<i></i>${rowOf(y[1],n2)}</div>`,a:m[0],w:[(m===x?y:x)[0]],optPics:{[x[0]]:x[1],[y[0]]:y[1]},picOnly:1,idn:fewer?'Mana yang lebih sedikit?':'Mana yang lebih banyak?',why:`${n1} ${x[1]}  ${n2} ${y[1]}`}}},
+ {id:'m0after',lo:0,hi:0,w:2,f(st,d){const n=R(1,[5,9,19][D(d)-1]);
+   return {s:'Number',q:`After ${n}?`,say:`What number comes after ${n}?`,vis:`<div class="emo numq">${n} ${qmark}</div>`,a:n+1,w:numWrongs(n+1,d,0,20).filter(x=>x!==n),num:D(d)>1?1:0,idn:`Angka apa sesudah ${n}?`,why:`${n}, ${n+1}`}}},
+ {id:'m0before',lo:0,hi:0,dmin:2,w:1,f(st,d){const n=R(2,D(d)===2?10:20);
+   return {s:'Number',q:`Before ${n}?`,say:`What number comes before ${n}?`,vis:`<div class="emo numq">${qmark} ${n}</div>`,a:n-1,w:numWrongs(n-1,d,0,20).filter(x=>x!==n),num:1,idn:`Angka apa sebelum ${n}?`,why:`${n-1}, ${n}`}}},
+ {id:'m0bigger',lo:0,hi:0,w:1,f(st,d){const top=D(d)===3?20:10,[a,b]=sample(Array.from({length:top},(_,i)=>i+1),2),small=D(d)>1&&Math.random()<.5;
+   return {s:'Number',q:small?'Which is smaller?':'Which is bigger?',say:small?'Which number is smaller?':'Which number is bigger?',a:small?Math.min(a,b):Math.max(a,b),w:[small?Math.max(a,b):Math.min(a,b)],idn:small?'Angka mana yang lebih kecil?':'Angka mana yang lebih besar?',why:`${Math.min(a,b)} < ${Math.max(a,b)}`}}},
+ {id:'m0shape',lo:0,hi:0,w:2,f(st,d){const set=sample(SH0,D(d)+1),[w,n]=set[0];
    if(Math.random()<.5)return {s:'Geometry & Measure',q:`Tap the ${w}.`,say:`Tap the ${w}`,a:w,w:set.slice(1).map(x=>x[0]),optPics:Object.fromEntries(set.map(([nm,k])=>[nm,polySVG(k)])),picOnly:1,idn:'Dengarkan nama bentuknya, lalu ketuk.',why:w};
    return {s:'Geometry & Measure',q:'What shape?',say:'What shape is it?',vis:polySVG(n),a:w,w:set.slice(1).map(x=>x[0]),idn:'Bentuk apa ini?',why:w}}},
- {id:'m0pattern',lo:0,hi:0,w:2,f(){const [A,B,C,D]=sample(OBJ0,4),t=pick(['AB','AAB','ABB','ABC']),m={A,B,C};const seq=t.repeat(4).split('').map(k=>m[k]);
-   const n=t.length*2+R(0,t.length-1),ans=seq[n];const opts=[A,B,C,D].filter(o=>o!==ans);
-   return {s:'Number',q:'What comes next?',say:'What comes next?',vis:`<div class="emo-row">${seq.slice(0,n).map(o=>`<span>${o[1]}</span>`).join('')}${qmark}</div>`,a:ans[0],w:sample(opts,2).map(o=>o[0]),optPics:Object.fromEntries([A,B,C,D].map(o=>[o[0],o[1]])),picOnly:1,idn:'Lihat polanya. Apa selanjutnya?',why:`${ans[1]}`}}},
- {id:'m0order',lo:0,hi:0,w:1,f(){const s=sample([1,2,3,4,5,6,7,8,9,10],4).sort((a,b)=>a-b).map(String);
-   return {s:'Number',kind:'order',q:'Small to big.',say:'Put the numbers in order, from small to big.',a:s,idn:'Urutkan angka dari kecil ke besar.',why:s.join(', ')}}}
+ {id:'m0corners',lo:0,hi:0,dmin:3,w:1,f(st,d){const [w,n]=pick(SH0),c=n===0?0:Math.abs(n);
+   return {s:'Geometry & Measure',q:'How many corners?',vis:polySVG(n),a:c,w:[0,3,4,5].filter(x=>x!==c).slice(0,D(d)),idn:'Ada berapa sudut (pojok)?',why:`A ${w} has ${c} corners.`}}},
+ {id:'m0long',lo:0,hi:0,w:2,f(st,d){const n=D(d)===1?2:3,cols=sample(BARCOL,n),lens=sample([20,40,60,80],n),short=D(d)===3&&Math.random()<.5;
+   const idx=lens.indexOf(short?Math.min(...lens):Math.max(...lens));const word=short?(n===2?'shorter':'shortest'):(n===2?'longer':'longest');
+   return {s:'Geometry & Measure',q:`Which is ${word}?`,say:`Which pencil is ${word}?`,a:cols[idx][0],w:cols.filter((_,i)=>i!==idx).map(c=>c[0]),optPics:Object.fromEntries(cols.map((c,i)=>[c[0],barSVG(lens[i],c)])),picOnly:1,bars:1,idn:short?'Pensil mana yang paling pendek?':'Pensil mana yang paling panjang?',why:`The ${cols[idx][0]} pencil is ${word}.`}}},
+ {id:'m0pattern',lo:0,hi:0,w:2,f(st,d){const [A,B,C,Dd]=sample(OBJ0,4),t=pick(D(d)===1?['AB']:D(d)===2?['AB','AAB','ABB']:['AAB','ABB','ABC']),m={A,B,C};const seq=t.repeat(4).split('').map(k=>m[k]);
+   const n=t.length*2+R(0,t.length-1),ans=seq[n],opts=[A,B,C,Dd].filter(o=>o!==ans);
+   return {s:'Number',q:'What comes next?',vis:`<div class="emo-row">${seq.slice(0,n).map(o=>`<span>${o[1]}</span>`).join('')}${qmark}</div>`,a:ans[0],w:sample(opts,D(d)).map(o=>o[0]),optPics:Object.fromEntries([A,B,C,Dd].map(o=>[o[0],o[1]])),picOnly:1,idn:'Lihat polanya. Apa selanjutnya?',why:`${ans[1]}`}}},
+ {id:'m0order',lo:0,hi:0,dmin:2,w:1,f(st,d){const s=sample(Array.from({length:D(d)===2?10:20},(_,i)=>i+1),D(d)+1).sort((a,b)=>a-b).map(String);
+   return {s:'Number',kind:'order',q:'Small to big.',say:'Put the numbers in order, from small to big.',a:s,idn:'Urutkan angka dari kecil ke besar.',why:s.join(', ')}}},
+ {id:'m0numword',lo:0,hi:0,dmin:2,w:1,f(st,d){const ns=sample([1,2,3,4,5,6,7,8,9,10],D(d)+1);
+   return {s:'Number',kind:'match',q:'Match numbers and words.',pairs:ns.map(n=>[String(n),NUMW[n]]),idn:'Pasangkan angka dengan tulisannya.',why:ns.map(n=>`${n} ${NUMW[n]}`).join('  ')}}}
 ];
-const ALIVE_Y=[['cat','🐱'],['tree','🌳'],['fish','🐟'],['flower','🌸'],['bird','🐦'],['dog','🐶'],['baby','👶'],['butterfly','🦋']],ALIVE_N=[['car','🚗'],['ball','⚽'],['book','📖'],['robot','🤖'],['clock','⏰'],['house','🏠'],['phone','📱'],['shoe','👟']];
+const ALIVE_Y=[['cat','🐱'],['tree','🌳'],['fish','🐟'],['flower','🌸'],['bird','🐦'],['dog','🐶'],['baby','👶'],['butterfly','🦋'],['mushroom','🍄'],['cactus','🌵']],ALIVE_N=[['car','🚗'],['ball','⚽'],['book','📖'],['robot','🤖'],['clock','⏰'],['house','🏠'],['phone','📱'],['shoe','👟'],['teddy bear','🧸']];
 const HOME0=[['fish','🐟','sea','🌊'],['bird','🐦','tree','🌳'],['camel','🐫','desert','🏜️'],['penguin','🐧','snow','❄️'],['bee','🐝','flower','🌸'],['monkey','🐵','jungle','🌴']];
 const SENSE0=[['see','eyes','👀'],['hear','ears','👂'],['smell','nose','👃'],['taste','tongue','👅'],['touch','hands','✋']];
 const WEATHER0=[['sunny','☀️'],['rainy','🌧️'],['snowy','❄️'],['cloudy','☁️'],['windy','🌬️']];
@@ -737,25 +810,41 @@ const HOT0=[['fire','🔥','hot'],['sun','☀️','hot'],['hot tea','☕','hot']
 const GOOD0=[['apple','🍎'],['carrot','🥕'],['banana','🍌'],['broccoli','🥦'],['milk','🥛'],['water','💧']],JUNK0=[['sweets','🍬'],['doughnut','🍩'],['chips','🍟'],['lollipop','🍭']];
 const FLOAT0=[['boat','⛵',1],['duck','🦆',1],['leaf','🍃',1],['ball','🏐',1],['key','🔑',0],['hammer','🔨',0],['anchor','⚓',0]];
 const DAY0=[['moon','🌙','night'],['stars','✨','night'],['owl','🦉','night'],['sun','☀️','day'],['rainbow','🌈','day']];
+const EAT0=[['rabbit','🐰','carrot','🥕'],['monkey','🐵','banana','🍌'],['cat','🐱','fish','🐟'],['bee','🐝','flower','🌸'],['mouse','🐭','cheese','🧀'],['dog','🐶','bone','🦴'],['cow','🐮','grass','🌿'],['panda','🐼','bamboo','🎋']];
+const LEGS0=[['bird','🐦',2],['duck','🦆',2],['dog','🐶',4],['cat','🐱',4],['cow','🐮',4],['spider','🕷️',8],['ant','🐜',6],['bee','🐝',6],['snake','🐍',0],['fish','🐟',0]];
+const WEAR0=[['cold','❄️','jacket','🧥'],['hot','☀️','sunglasses','🕶️'],['rainy','🌧️','umbrella','☂️'],['cold','⛄','scarf','🧣'],['hot','☀️','cap','🧢']];
+const SOFT0=[['teddy bear','🧸','soft'],['sponge','🧽','soft'],['bread','🍞','soft'],['key','🔑','hard'],['hammer','🔨','hard'],['coconut','🥥','hard'],['bone','🦴','hard']];
+const GROW0=[[['seed','🌰'],['shoot','🌱'],['flower','🌻']],[['egg','🥚'],['chick','🐣'],['hen','🐔']],[['baby','👶'],['child','🧒'],['adult','🧑']]];
+const capFirst=s=>s[0].toUpperCase()+s.slice(1);
 const S0=[
  {id:'s0alive',lo:0,hi:0,w:3,f(){const y=Math.random()<.5,[w,e]=pick(y?ALIVE_Y:ALIVE_N);
-   return {s:'Biology',q:'Is it alive?',vis:big(e),a:y?'Yes':'No',w:[y?'No':'Yes'],idn:'Apakah ini makhluk hidup?',why:y?`Yes! ${an(w)} is alive. It grows.`:`No. ${an(w)[0].toUpperCase()+an(w).slice(1)} is not alive.`}}},
- {id:'s0home',lo:0,hi:0,w:2,f(){const set=sample(HOME0,3),[w,e,h,he]=set[0];
+   return {s:'Biology',q:'Is it alive?',vis:big(e),a:y?'Yes':'No',w:[y?'No':'Yes'],idn:'Apakah ini makhluk hidup?',why:y?`Yes! ${capFirst(an(w))} is alive. It grows.`:`No. ${capFirst(an(w))} is not alive.`}}},
+ {id:'s0home',lo:0,hi:0,w:2,f(st,d){const set=sample(HOME0,D(d)+1),[w,e,h,he]=set[0];
    return {s:'Biology',q:'Where does it live?',vis:big(e),a:h,w:set.slice(1).map(x=>x[2]),optPics:Object.fromEntries(set.map(x=>[x[2],x[3]])),idn:'Hewan ini tinggal di mana?',why:`${e} ${w}: ${he} ${h}`}}},
- {id:'s0sense',lo:0,hi:0,w:2,f(){const set=sample(SENSE0,3),[v,b,e]=set[0];
+ {id:'s0eat',lo:0,hi:0,w:2,f(st,d){const set=sample(EAT0,D(d)+1),[w,e,f,fe]=set[0];
+   return {s:'Biology',q:'What does it eat?',say:`What does the ${w} eat?`,vis:big(e),a:f,w:set.slice(1).map(x=>x[2]),optPics:Object.fromEntries(set.map(x=>[x[2],x[3]])),idn:'Hewan ini makan apa?',why:`${e} ${w} eats ${f}.`}}},
+ {id:'s0legs',lo:0,hi:0,dmin:2,w:2,f(st,d){const [w,e,n]=pick(LEGS0);
+   return {s:'Biology',q:'How many legs?',say:`How many legs does the ${w} have?`,vis:big(e),a:n,w:[0,2,4,6,8].filter(x=>x!==n).sort(()=>Math.random()-.5).slice(0,D(d)),idn:'Kakinya ada berapa?',why:`${capFirst(an(w))} has ${n} legs.`}}},
+ {id:'s0sense',lo:0,hi:0,w:2,f(st,d){const set=sample(SENSE0,D(d)+1),[v,b]=set[0];
    return {s:'Biology',q:`I ${v} with my…`,say:`I ${v} with my...`,a:b,w:set.slice(1).map(x=>x[1]),optPics:Object.fromEntries(set.map(x=>[x[1],x[2]])),idn:'Pakai bagian tubuh yang mana?',why:`I ${v} with my ${b}.`}}},
- {id:'s0weather',lo:0,hi:0,w:2,f(){const set=sample(WEATHER0,3),[w,e]=set[0];
+ {id:'s0weather',lo:0,hi:0,w:2,f(st,d){const set=sample(WEATHER0,D(d)+1),[w,e]=set[0];
    return {s:'Earth & Space',q:'What is the weather?',say:'What is the weather like?',vis:big(e),a:w,w:set.slice(1).map(x=>x[0]),idn:'Cuacanya bagaimana?',why:`${e} ${w}`}}},
+ {id:'s0wear',lo:0,hi:0,dmin:2,w:2,f(st,d){const [wt,we,it,ie]=pick(WEAR0);const wr=sample(WEAR0.filter(x=>x[0]!==wt),D(d));
+   return {s:'Earth & Space',q:`It is ${wt}. What do you need?`,vis:big(we),a:it,w:wr.map(x=>x[2]),optPics:Object.fromEntries([[it,ie],...wr.map(x=>[x[2],x[3]])]),idn:'Cuacanya begini. Kamu perlu apa?',why:`${capFirst(wt)}: ${ie} ${it}`}}},
  {id:'s0hot',lo:0,hi:0,w:2,f(){const [w,e,h]=pick(HOT0);
    return {s:'Physics',q:'Hot or cold?',vis:big(e),a:h,w:[h==='hot'?'cold':'hot'],idn:'Panas atau dingin?',why:`${e} ${w}: ${h}`}}},
- {id:'s0healthy',lo:0,hi:0,w:2,f(){const g=pick(GOOD0),j=sample(JUNK0,2);
+ {id:'s0soft',lo:0,hi:0,dmin:2,w:1,f(){const [w,e,h]=pick(SOFT0);
+   return {s:'Chemistry',q:'Hard or soft?',vis:big(e),a:h,w:[h==='hard'?'soft':'hard'],idn:'Keras (hard) atau lembut (soft)?',why:`${e} ${w}: ${h}`}}},
+ {id:'s0healthy',lo:0,hi:0,w:2,f(st,d){const g=pick(GOOD0),j=sample(JUNK0,D(d));
    return {s:'Biology',q:'Which is healthy?',say:'Which food is healthy?',a:g[0],w:j.map(x=>x[0]),optPics:picsOf([g,...j]),picOnly:1,idn:'Mana makanan yang sehat?',why:`${g[1]} ${g[0]} is healthy.`}}},
- {id:'s0plant',lo:0,hi:0,w:1,f(){const g=pick([['water','💧'],['sun','☀️']]),j=sample([['sweets','🍬'],['phone','📱'],['shoe','👟'],['toy car','🚗']],2);
+ {id:'s0plant',lo:0,hi:0,w:1,f(st,d){const g=pick([['water','💧'],['sun','☀️']]),j=sample([['sweets','🍬'],['phone','📱'],['shoe','👟'],['toy car','🚗']],D(d));
    return {s:'Biology',q:'A plant needs…',say:'What does a plant need?',a:g[0],w:j.map(x=>x[0]),optPics:picsOf([g,...j]),picOnly:1,idn:'Tanaman butuh apa supaya tumbuh?',why:'Plants need water and sun.'}}},
  {id:'s0float',lo:0,hi:0,w:2,f(){const [w,e,fl]=pick(FLOAT0);
-   return {s:'Physics',q:'Does it float?',vis:big(e),a:fl?'Yes':'No',w:[fl?'No':'Yes'],idn:'Apakah benda ini mengapung di air?',why:fl?`${an(w)[0].toUpperCase()+an(w).slice(1)} floats.`:`${an(w)[0].toUpperCase()+an(w).slice(1)} sinks.`}}},
+   return {s:'Physics',q:'Does it float?',vis:big(e),a:fl?'Yes':'No',w:[fl?'No':'Yes'],idn:'Apakah benda ini mengapung di air?',why:fl?`${capFirst(an(w))} floats.`:`${capFirst(an(w))} sinks.`}}},
  {id:'s0day',lo:0,hi:0,w:1,f(){const [w,e,d]=pick(DAY0);
-   return {s:'Earth & Space',q:'Day or night?',vis:big(e),a:d,w:[d==='day'?'night':'day'],idn:'Siang (day) atau malam (night)?',why:`${e} ${w}: ${d}`}}}
+   return {s:'Earth & Space',q:'Day or night?',vis:big(e),a:d,w:[d==='day'?'night':'day'],idn:'Siang (day) atau malam (night)?',why:`${e} ${w}: ${d}`}}},
+ {id:'s0grow',lo:0,hi:0,dmin:2,w:1,f(){const g=pick(GROW0);
+   return {s:'Biology',kind:'order',q:'What comes first?',say:'How do they grow? Put them in order.',a:g.map(x=>x[1]),idn:'Urutkan dari yang pertama.',why:g.map(x=>`${x[1]} ${x[0]}`).join(' → ')}}}
 ];
 MG.push(...M0);SG.push(...S0);EG.push(...E0);
 const IDN_KIND={mc:'Pilih jawaban yang benar.',input:'Ketik jawabannya.',order:'Urutkan dengan benar.',spell:'Susun hurufnya.',match:'Pasangkan yang cocok.'};
@@ -771,8 +860,8 @@ function finalize(raw,subj){const q={...raw,subj,kind:raw.kind||'mc'};
   delete q.w;q.sig=subj+'|'+q.q+'|'+(Array.isArray(q.a)?q.a.join(','):q.kind==='match'?q.pairs.map(p=>p.join('=')).join(','):q.a);
   return q}
 function weightedPick(gs){const tot=gs.reduce((s,g)=>s+g.w,0);let r=Math.random()*tot;for(const g of gs){r-=g.w;if(r<=0)return g}return gs[gs.length-1]}
-function genOne(subj,st,avoid){const gs=GENS[subj].filter(g=>st>=g.lo&&st<=g.hi);let q,g=0;
-  do{q=finalize(weightedPick(gs).f(st),subj)}while(avoid&&avoid.has(q.sig)&&g++<15);q.st=st;return q}
+function genOne(subj,st,avoid,d=2){const gs=GENS[subj].filter(g=>st>=g.lo&&st<=g.hi&&(g.dmin||1)<=d);let q,g=0;
+  do{q=finalize(weightedPick(gs).f(st,d),subj)}while(avoid&&avoid.has(q.sig)&&g++<15);q.st=st;q.d=d;return q}
 function checkInput(q,val){const n=s=>String(s).trim().toLowerCase().replace(/[,\s]/g,'').replace(/^\+/,'');const a=n(q.a),v=n(val);if(!v)return false;
   if(a===v)return true;const fa=parseFloat(a),fv=parseFloat(v);return /^-?[\d.]+$/.test(a)&&/^-?[\d.]+$/.test(v)&&Math.abs(fa-fv)<1e-9}
 
@@ -855,6 +944,7 @@ function petSVG(m){const c=m.c,a=m.a,ink='#2a1f4a';let f='';
 
 
 
+
 /* ===================== BOSSES ===================== */
 const BOSSES={
  math:{name:'Calculator Crab',pal:{r:'#e8442e',y:'#ffc531',W:'#fff',K:'#1a1333'},map:['.r........r.','rr........rr','r.r......r.r','...rrrrrr...','..rWKrrWKr..','.rrrrrrrrrr.','rrrrryyrrrrr','.rrrrrrrrrr.','..rrrrrrrr..','.r.r.rr.r.r.','r..r....r..r','............']},
@@ -871,26 +961,30 @@ const todayKey=()=>dk(new Date()),yesterdayKey=()=>dk(new Date(Date.now()-864e5)
 const weekKey=()=>{const d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7));return dk(d)};
 const uid=()=>Math.random().toString(36).slice(2,9);
 const DAY=864e5,REVIEW_GAPS=[1,3,7];
-const DEFAULT_REWARDS=[{id:'r1',name:'Extra 30 min game time',cost:150,icon:'game'},{id:'r2',name:'Ice cream treat',cost:250,icon:'cone'},{id:'r3',name:'Pick the family movie',cost:400,icon:'ticket'},{id:'r4',name:'Marugame Udon lunch',cost:600,icon:'udon'},{id:'r5',name:'New LEGO set',cost:2000,icon:'brick'}];
+const DEFAULT_REWARDS=[{id:'r1',name:'Extra 30 min game time',cost:300,icon:'game'},{id:'r2',name:'Ice cream treat',cost:500,icon:'cone'},{id:'r3',name:'Pick the family movie',cost:900,icon:'ticket'},{id:'r4',name:'Marugame Udon lunch',cost:1500,icon:'udon'},{id:'r5',name:'New LEGO set',cost:5000,icon:'brick'}];
 const SUBJS=['math','sci','eng'];
 const tri=v=>({math:v,sci:v,eng:v});
 function upgrade(p){
   p.adj=p.adj||tri(0);p.recent=p.recent||{math:[],sci:[],eng:[]};p.seen=p.seen||{math:[],sci:[],eng:[]};p.review=p.review||[];
   p.tier=p.tier||tri(1);p.flags=p.flags||{math:Math.min(5,p.quests?.math||0),sci:Math.min(5,p.quests?.sci||0),eng:Math.min(5,p.quests?.eng||0)};
   p.bosses=p.bosses||0;p.today=p.today||{date:todayKey(),n:0};p.today.coins=p.today.coins||0;p.week=p.week||{key:weekKey(),xp:0};
-  p.quests=p.quests||tri(0);p.stats=p.stats||{math:{c:0,t:0},sci:{c:0,t:0},eng:{c:0,t:0}};p.strands=p.strands||{};p.pets=p.pets||['pip'];if(p.indo===undefined)p.indo=p.stage<=1;if(p.autoRead===undefined)p.autoRead=p.stage<=1;return p}
+  p.quests=p.quests||tri(0);p.stats=p.stats||{math:{c:0,t:0},sci:{c:0,t:0},eng:{c:0,t:0}};p.strands=p.strands||{};p.pets=p.pets||['pip'];p.sp=p.sp||tri(0);if(p.indo===undefined)p.indo=p.stage<=1;if(p.autoRead===undefined)p.autoRead=p.stage<=1;return p}
 const newPlayer=(name,stage,avatar)=>upgrade({id:uid(),name,stage,avatar,xp:0,coins:20,streak:0,lastDay:null,created:Date.now()});
 const freshFamily=()=>({v:3,profiles:[],active:null,pin:null,rewards:DEFAULT_REWARDS.map(r=>({...r})),claims:[],muted:false,coinCap:150});
 let F=freshFamily();
 try{const raw=localStorage.getItem(KEY);if(raw)F=Object.assign(freshFamily(),JSON.parse(raw));}catch(e){}
 F.profiles.forEach(upgrade);if(F.coinCap===undefined)F.coinCap=150;
+if((F.v||0)<4){const OLD={r1:150,r2:250,r3:400,r4:600,r5:2000};F.rewards.forEach(r=>{const nd=DEFAULT_REWARDS.find(x=>x.id===r.id);if(nd&&OLD[r.id]===r.cost)r.cost=nd.cost});F.v=4;try{localStorage.setItem(KEY,JSON.stringify(F))}catch(e){}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(F))}catch(e){}}
 const P=()=>F.profiles.find(p=>p.id===F.active);
 const lvlOf=p=>Math.floor(p.xp/100)+1;
 const weekXP=p=>p.week&&p.week.key===weekKey()?p.week.xp:0;
 function rollDay(p){if(p.today.date!==todayKey())p.today={date:todayKey(),n:0,coins:0};if(!p.week||p.week.key!==weekKey())p.week={key:weekKey(),xp:0}}
 const effStage=(p,subj)=>Math.max(0,Math.min(6,p.stage+(p.adj[subj]||0)));
-const stageName=n=>n===0?'Starter':'Stage '+n;
+const stageName=n=>'Stage '+n;
+/* step 1–3 inside a stage: +1 point per right answer, −1 per wrong; 10 points per step; 30 = next stage */
+const SP_STEP=10,SP_STAGE=30;
+const stepOf=(p,s)=>1+Math.min(2,Math.floor((p.sp[s]||0)/SP_STEP));
 const isStarter=p=>p.stage===0;
 
 /* ---- coins: daily limit for normal play ---- */
@@ -899,8 +993,7 @@ function earn(p,n,exempt){if(n<=0)return 0;if(!exempt&&F.coinCap){const left=Mat
 /* ---- adaptive difficulty ---- */
 function track(p,subj,ok){const r=p.recent[subj];r.push(ok?1:0);if(r.length>12)r.shift();
   if(r.length>=8){const acc=r.reduce((a,b)=>a+b,0)/r.length;
-    if(acc>=.85&&p.adj[subj]<1&&p.stage+p.adj[subj]<6){p.adj[subj]++;p.recent[subj]=[];return 'up'}
-    if(acc<.5&&p.adj[subj]>-1&&p.stage+p.adj[subj]>0){p.adj[subj]--;p.recent[subj]=[];return 'down'}}return null}
+    if(acc<.5&&(p.sp[subj]||0)<4&&p.stage+p.adj[subj]>0){p.adj[subj]--;p.sp[subj]=15;p.recent[subj]=[];return 'down'}}return null}
 
 /* ---- spaced repetition of mistakes ---- */
 function addMistake(p,q){const c={...q};delete c.rev;const ex=p.review.find(r=>r.q.sig===q.sig);
@@ -914,10 +1007,13 @@ function freshForQuest(q){const c=finalize({...q},q.subj);c.rev=true;return c}
 function buildList(p,mode,subj,n){const list=[],avoid=new Set();
   if(mode==='review'){const pool=dueReviews(p).concat(p.review.filter(r=>r.due>Date.now()).sort((a,b)=>a.due-b.due));
     pool.slice(0,n).forEach(r=>{const q={...r.q,rev:true};list.push(q);avoid.add(q.sig)});return list}
-  if(mode==='mystery'){for(let i=0;i<n;i++){const s=SUBJS[i%3];const e=effStage(p,s),st=e===0?0:Math.min(6,e+1);const q=genOne(s,st,new Set([...avoid,...p.seen[s]]));list.push(q);avoid.add(q.sig)}return shuffle(list)}
+  if(mode==='mystery'){for(let i=0;i<n;i++){const s=SUBJS[i%3];const e=effStage(p,s),st=e===0?0:Math.min(6,e+1);const q=genOne(s,st,new Set([...avoid,...p.seen[s]]),e===0?stepOf(p,s):2);list.push(q);avoid.add(q.sig)}return shuffle(list)}
   if(mode==='normal'){dueReviews(p,subj).slice(0,2).forEach(r=>{const q={...r.q,rev:true};list.push(q);avoid.add(q.sig)})}
-  const st=effStage(p,subj);const seen=new Set(p.seen[subj]);
-  while(list.length<n){const q=genOne(subj,st,new Set([...avoid,...seen]));list.push(q);avoid.add(q.sig)}
+  const st=effStage(p,subj),d=stepOf(p,subj);const seen=new Set(p.seen[subj]);
+  /* step 1 mixes in some easier questions, step 3 previews the next stage (not used for stage 0, whose step changes the questions directly) */
+  while(list.length<n){const r=Math.random(),av=new Set([...avoid,...seen]);let q;
+    if(st>1&&d===1&&r<.25)q=genOne(subj,st-1,av,3);else if(st>0&&st<6&&d===3&&r<.25)q=genOne(subj,st+1,av,1);else q=genOne(subj,st,av,d);
+    list.push(q);avoid.add(q.sig)}
   return mode==='normal'?shuffle(list):list}
 function remember(p,q){const s=p.seen[q.subj];s.push(q.sig);if(s.length>50)s.shift()}
 
@@ -970,7 +1066,7 @@ const TABS=[
 ];
 document.getElementById('tabsIn').innerHTML=TABS.map(t=>`<button data-view="${t.v}">${pixel(t.ico,t.pal,'')}<span>${t.l}</span></button>`).join('');
 const STAGE_AGE=['5–6','6–7','7–8','8–9','9–10','10–11'];
-const STAGE_LABEL=['Starter – still learning to read',...STAGE_AGE.map((a,i)=>`Stage ${i+1} (age ${a})`)];
+const STAGE_LABEL=['Stage 0 – just starting to read (age 4–6)',...STAGE_AGE.map((a,i)=>`Stage ${i+1} (age ${a})`)];
 
 function renderChrome(){const p=P(),inGame=!!p&&view!=='who';
   document.getElementById('bar').hidden=!inGame;document.getElementById('tabs').hidden=!inGame||view==='quest';
@@ -1002,7 +1098,9 @@ function renderNewPlayer(){const sel=editing.avatar||'alien';
    const p=newPlayer(name,+document.getElementById('np-stage').value,sel);F.profiles.push(p);F.active=p.id;editing=null;save();view='map';render();toast(`Welcome aboard, ${name}!`)}}
 
 /* --- map --- */
-function modePill(p,k){const a=p.adj[k];return a>0?'<span class="mode up">Challenge mode</span>':a<0?'<span class="mode down">Practice mode</span>':''}
+function stepBar(p,k){const e=effStage(p,k),pts=p.sp[k]||0,st=stepOf(p,k),left=SP_STAGE-pts;
+  return `<div class="stepbox"><div class="row" style="justify-content:space-between"><b>${stageName(e)} · Step ${st} of 3</b><small>${e<6?`${left} more right answers to ${stageName(e+1)}`:'Top stage'}</small></div>
+   <div class="steps" aria-label="${pts} of ${SP_STAGE} points">${[0,1,2].map(i=>`<i><b style="width:${Math.max(0,Math.min(1,(pts-i*SP_STEP)/SP_STEP))*100}%"></b></i>`).join('')}</div></div>`}
 function renderMap(){const p=P();rollDay(p);const goal=isStarter(p)?10:15,n=Math.min(p.today.n,goal);
   const next=F.rewards.slice().sort((a,b)=>a.cost-b.cost).find(r=>r.cost>p.coins)||null;
   const due=dueReviews(p).length,total=p.review.length,mystery=p.bosses>0,capHit=F.coinCap&&p.today.coins>=F.coinCap;
@@ -1018,7 +1116,7 @@ function renderMap(){const p=P();rollDay(p);const goal=isStarter(p)?10:15,n=Math
    </div></section>
   <h2 class="sec-title">The islands</h2>
   <section class="islands">${SUBJS.map(k=>{const s=SUBJ[k],bossReady=p.flags[k]>=5;return `<article class="card island">${islandSVG(k)}
-   <div class="row" style="justify-content:space-between"><span class="subj ${s.cls}">${s.subject} · Island level ${p.tier[k]}</span>${modePill(p,k)}</div><h3>${s.name}</h3>
+   <div class="row" style="justify-content:space-between"><span class="subj ${s.cls}">${s.subject} · Island level ${p.tier[k]}</span></div><h3>${s.name}</h3>${stepBar(p,k)}
    <div class="tags">${s.strands.map(t=>`<span>${t}</span>`).join('')}</div>
    <div class="isl-foot"><div class="stars" aria-label="${Math.min(5,p.flags[k])} of 5 flags to the boss">${Array.from({length:5},(_,i)=>`<i class="${i<Math.min(5,p.flags[k])?'on':''}"></i>`).join('')}</div>
    ${bossReady?`<div class="row"><button class="btn sm ghost" data-go="${k}">Practise</button><button class="btn grape" data-boss="${k}">Fight boss!</button></div>`:`<button class="btn ${s.btn}" data-go="${k}">Set sail</button>`}</div>
@@ -1044,7 +1142,7 @@ function headHTML(){const s=qColor(),title=Q.mode==='review'?'Fix my mistakes':Q
 function renderQuest(){const q=Q.list[Q.i];const s=SUBJ[q.subj];Q.answered=false;Q.shownAt=Date.now();Q.work=null;
   const L=['A','B','C','D'],lc=['var(--brick)','var(--sun-dk)','var(--plum)','var(--sky-dk)'];let body='';
   const kid=q.st===0,pl=P();
-  if(q.kind==='mc')body=`<div class="opts ${q.opts.length===2?'two':''} ${q.opts.length===3&&q.optPics?'three':''}">${q.opts.map((o,i)=>q.optPics?`<button class="opt pic" data-opt="${i}" aria-label="${esc(o)}"><span class="pic">${q.optPics[o]}</span>${q.picOnly?'':`<span class="w">${esc(o)}</span>`}</button>`:`<button class="opt" data-opt="${i}"><b style="background:${lc[i]}">${L[i]}</b><span>${esc(o)}</span></button>`).join('')}</div>`;
+  if(q.kind==='mc')body=`<div class="opts ${q.opts.length===2?'two':''} ${q.opts.length===3&&q.optPics?'three':''} ${q.bars?'bars':''}">${q.opts.map((o,i)=>q.optPics?`<button class="opt pic" data-opt="${i}" aria-label="${esc(o)}"><span class="pic">${q.optPics[o]}</span>${q.picOnly?'':`<span class="w">${esc(o)}</span>`}</button>`:`<button class="opt" data-opt="${i}"><b style="background:${lc[i]}">${L[i]}</b><span>${esc(o)}</span></button>`).join('')}</div>`;
   if(q.kind==='input')body=`<form class="in-row" id="inForm"><input id="ans" inputmode="${/[a-z]/i.test(q.a)?'text':'decimal'}" autocomplete="off" placeholder="Answer" aria-label="Your answer"><button class="btn ${s.btn}" type="submit">Check</button></form>${kid?'':'<p class="muted" style="margin:0;font-size:14px">Type the number. No need for commas.</p>'}`;
   if(q.kind==='order'||q.kind==='spell'){Q.work={picked:[],pool:q.items.map((t,i)=>i)};body=`<div class="slot" id="slot" aria-label="Your answer"></div><div class="tiles" id="pool"></div><div class="row"><button class="btn ${s.btn}" id="chk" disabled>Check</button><button class="btn ghost" id="clr">Clear</button></div>`}
   if(q.kind==='match'){Q.work={sel:null,done:new Set(),miss:0};body=`<div class="match"><div class="col" id="mL">${q.pairs.map((p,i)=>`<button class="mt" data-ml="${i}">${esc(p[0])}</button>`).join('')}</div><div class="col" id="mR">${q.right.map((r,i)=>`<button class="mt" data-mr="${i}">${esc(r)}</button>`).join('')}</div></div>${kid?'':'<p class="muted" style="margin:0;font-size:14px">Tap a word on the left, then its partner on the right.</p>'}`}
@@ -1095,11 +1193,14 @@ function submit(ok,given){if(Q.answered)return;Q.answered=true;const p=P();rollD
     if(q.rev){const r=reviewRight(p,q);if(r==='mastered'){Q.mastered++;extra+=`<span class="combo">Mastered!</span>`}}
     if(Q.boss){Q.boss.hp--;sfx.hit()}else sfx.good()}
   else{Q.combo=0;addXP(2);Q.xp+=2;addMistake(p,q);sfx.bad();if(Q.boss)Q.boss.hearts--}
-  if(q.subj&&Q.mode!=='review'){const ch=track(p,q.subj,ok);if(ch)Q.levelChange={subj:q.subj,dir:ch}}
+  if(q.subj&&Q.mode!=='review'&&Q.mode!=='mystery'){const sj=q.subj,before=stepOf(p,sj);p.sp[sj]=Math.max(0,(p.sp[sj]||0)+(ok?1:-1));
+    if(p.sp[sj]>=SP_STAGE){if(effStage(p,sj)<6){p.adj[sj]++;p.sp[sj]=0;p.recent[sj]=[];Q.levelChange={subj:sj,dir:'up'};extra+=`<span class="combo">${stageName(effStage(p,sj))} unlocked!</span>`;setTimeout(()=>{sfx.win();confetti()},200)}else p.sp[sj]=SP_STAGE-1}
+    else if(stepOf(p,sj)>before)extra+=`<span class="combo">Step ${stepOf(p,sj)}!</span>`;
+    const ch=track(p,sj,ok);if(ch)Q.levelChange={subj:sj,dir:ch}}
   if(F.coinCap&&ok&&!tooQuick&&coinsGot===0)extra+=`<span class="note">Daily coin limit reached. XP still counts.</span>`;
   save();renderChrome();
   const bossOver=Q.boss&&(Q.boss.hp<=0||Q.boss.hearts<=0);
-  if(Q.boss&&!bossOver&&Q.i===Q.list.length-1){Q.list.push(genOne(Q.key,effStage(p,Q.key),new Set(Q.list.map(x=>x.sig))))}
+  if(Q.boss&&!bossOver&&Q.i===Q.list.length-1){Q.list.push(genOne(Q.key,effStage(p,Q.key),new Set(Q.list.map(x=>x.sig)),stepOf(p,Q.key)))}
   const last=bossOver||(!Q.boss&&Q.i===Q.list.length-1);
   if(Q.boss){const hp=app.querySelector('.hp i');if(hp)hp.style.width=(Math.max(0,Q.boss.hp)/Q.boss.max*100)+'%';const sm=app.querySelector('.bossbar small');if(sm)sm.textContent=`Boss health ${Math.max(0,Q.boss.hp)}/${Q.boss.max}`;const hs=app.querySelector('.hearts');if(hs)hs.innerHTML=[0,1,2].map(i=>heartSVG(i<Q.boss.hearts)).join('');const bf=app.querySelector('.boss-face');if(bf){bf.classList.remove('hit');void bf.offsetWidth;if(ok)bf.classList.add('hit')}}
   const kid=q.st===0,head=ok?(kid?pick(['Yes! Well done!','Great job!','Super!']):pick(['Brilliant!','Treasure found!','Spot on!','Full sails!'])):(kid?'Oops! Look:':pick(['Nearly there!','Good try!','Not quite!']));
@@ -1119,7 +1220,7 @@ function finish(){const p=P(),answered=Q.res.length,right=Q.res.filter(Boolean).
     if(Q.mode==='mystery')bonus+=earn(p,10);
     title=acc===1?'Perfect voyage!':acc>=.5?'Great sailing!':'Every captain practises!'}
   if(Q.mastered)msg+=` You mastered ${Q.mastered} mistake${Q.mastered===1?'':'s'}!`;
-  if(Q.levelChange){const s=SUBJ[Q.levelChange.subj].subject;msg+=Q.levelChange.dir==='up'?` ${s} is getting harder: you earned Challenge mode!`:` ${s} will be a bit easier for a while.`}
+  if(Q.levelChange){const s=SUBJ[Q.levelChange.subj].subject;msg+=Q.levelChange.dir==='up'?` ${s} moved up to ${stageName(effStage(P(),Q.levelChange.subj))}!`:` ${s} will be a bit easier for a while.`}
   Q.c+=bonus;save();renderChrome();sfx.win();if(acc>=.8||(Q.boss&&Q.boss.hp<=0))confetti();const s=Q.boss?{col:'var(--grape)',btn:'grape'}:qColor();
   const again=Q.mode==='boss'?(Q.boss.hp<=0?`<button class="btn ${SUBJ[Q.key].btn}" data-go="${Q.key}">Keep sailing</button>`:`<button class="btn grape" data-boss="${Q.key}">Try again</button>`):Q.mode==='review'?'<button class="btn red" data-review="1">Fix more</button>':Q.mode==='mystery'?'<button class="btn grape" data-mystery="1">Explore again</button>':`<button class="btn ${s.btn}" data-go="${Q.key}">Sail again</button>`;
   app.innerHTML=`<section class="quest"><div class="q-head" style="background:${s.col}"><h2>${Q.mode==='boss'?'Boss battle':Q.mode==='review'?'Fix my mistakes':esc(qColor().name)}</h2></div><div class="result">
@@ -1179,12 +1280,12 @@ function renderGrown(){
 
   <section class="card gsec"><h2>Progress for ${esc(me.name)}</h2>
    ${SUBJS.map(k=>{const s=SUBJ[k],e=effStage(me,k);return `<div class="acc-row"><b style="text-align:left">${s.subject}</b><div class="t"><i style="width:${pct(me.stats[k])}%;background:${s.col}"></i></div><b>${me.stats[k].t?pct(me.stats[k])+'%':'—'}</b></div>
-    <p class="muted" style="margin:0 0 4px;font-size:14px">Playing at ${stageName(e)}${e!==me.stage?` (set to ${stageName(me.stage)}, adjusted ${e>me.stage?'up':'down'} by results)`:''} · island level ${me.tier[k]}</p>`}).join('')}
+    <p class="muted" style="margin:0 0 4px;font-size:14px">Playing at ${stageName(e)}, step ${stepOf(me,k)} of 3${e!==me.stage?` (set to ${stageName(me.stage)}, adjusted ${e>me.stage?'up':'down'} by results)`:''} · island level ${me.tier[k]}</p>`}).join('')}
    <p class="muted">${me.review.length} mistake${me.review.length===1?'':'s'} waiting to be fixed · ${me.bosses} boss${me.bosses===1?'':'es'} beaten.</p>
    ${(()=>{const rows=Object.entries(me.strands).map(([k,v])=>{const [sub,str]=k.split(':');return {sub,str,...v,p:pct(v)}}).filter(r=>SUBJ[r.sub]).sort((a,b)=>a.p-b.p);
     return rows.length?`<div class="tbl-wrap"><table><thead><tr><th>Subject</th><th>Topic</th><th>Right</th><th>Status</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${SUBJ[r.sub].subject}</td><td>${r.str}</td><td>${r.c}/${r.t} (${r.p}%)</td><td><span class="chip ${r.p>=80?'ok':r.p>=55?'wait':'no'}">${r.p>=80?'Strong':r.p>=55?'Getting there':'Needs practice'}</span></td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Topics appear after the first quest, weakest first.</p>'})()}</section>
 
-  <section class="card gsec"><h2>Players</h2><p class="muted">Each child gets their own progress. The stage is a starting point; the game moves up or down one stage based on results. Pick <b>Starter</b> for a child who is still learning to read: short questions, big pictures, everything read aloud.</p>
+  <section class="card gsec"><h2>Players</h2><p class="muted">Each child gets their own progress. The stage is a starting point. Each right answer moves the child forward (each wrong answer one point back); 3 steps of 10 points each unlock the next stage. Pick <b>Stage 0</b> for a child who is just starting to read: short questions, big pictures, everything read aloud.</p>
    <div class="list">${F.profiles.map(p=>`<div class="li"><span style="width:44px">${avSVG(p.avatar)}</span><div class="grow"><b>${esc(p.name)}</b><div class="muted" style="margin:0;font-size:14px">Level ${lvlOf(p)} · ${fmt(p.coins)} coins · ${p.review.length} to fix</div></div>
     <select data-stage="${p.id}" aria-label="Stage for ${esc(p.name)}" style="width:auto">${[0,1,2,3,4,5,6].map(n=>`<option value="${n}" ${n===p.stage?'selected':''}>${stageName(n)}</option>`).join('')}</select>
     <button class="btn sm ghost" data-bonus="${p.id}">+50 coins</button><button class="btn sm red" data-del="${p.id}">Remove</button>
@@ -1195,7 +1296,7 @@ function renderGrown(){
    <label class="f" for="capSel" style="max-width:280px;margin-top:10px">Daily coin limit<select id="capSel">${[[0,'No limit'],[100,'100 a day'],[150,'150 a day'],[200,'200 a day'],[300,'300 a day']].map(([v,l])=>`<option value="${v}" ${F.coinCap===v?'selected':''}>${l}</option>`).join('')}</select></label>
    <p class="muted" style="font-size:14px">Level-up and boss rewards don't count toward the limit.</p></section>
 
-  <section class="card gsec"><h2>Reward shop</h2><p class="muted">Set your own rewards and prices. A child doing the daily mission well earns about 80–120 coins a day.</p>
+  <section class="card gsec"><h2>Reward shop</h2><p class="muted">Set your own rewards and prices. A child doing the daily mission well earns about 80–120 coins a day, so at the default prices a LEGO set takes about 6–8 weeks of steady practice.</p>
    <div class="list">${F.rewards.map(r=>`<div class="li">${icoSVG(r.icon)}<div class="grow"><b>${esc(r.name)}</b></div><label style="display:flex;gap:6px;align-items:center;font-weight:700">Coins<input type="number" min="10" step="10" value="${r.cost}" data-cost="${r.id}" id="cost-${r.id}"></label><button class="btn sm red" data-rdel="${r.id}">Remove</button></div>`).join('')}</div>
    <div class="form"><label class="f" for="nr-name">New reward<input id="nr-name" placeholder="e.g. Trip to the zoo" maxlength="40"></label>
     <label class="f" for="nr-cost">Coins<input id="nr-cost" type="number" min="10" step="10" value="300"></label>
